@@ -1,113 +1,123 @@
-.messageBubble {
+.dateLabel {
   display: flex;
-  align-items: flex-end;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-md);
-  animation: slideInUp var(--transition-base);
+  justify-content: center;
+  margin: 16px 0;
 }
 
-.messageBubble.own {
-  justify-content: flex-end;
+.dateLabel span {
+  background: rgba(0, 0, 0, 0.05);
+  color: #7589a3;
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 12px;
 }
 
-.messageBubble.other {
-  justify-content: flex-start;
+.messageWrapper {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+  max-width: 70%;
 }
 
-.avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-full);
-  object-fit: cover;
+.messageWrapper.sent {
+  margin-left: auto;
+  flex-direction: row-reverse;
+}
+
+.messageWrapper.received {
+  margin-right: auto;
+}
+
+.senderAvatar {
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
+  align-self: flex-end;
 }
 
-.bubble {
-  max-width: 60%;
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-radius: var(--radius-xl);
+.senderAvatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.messageContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sent .messageContent {
+  align-items: flex-end;
+}
+
+.received .messageContent {
+  align-items: flex-start;
+}
+
+.messageBubble {
+  padding: 10px 14px;
+  border-radius: 16px;
+  max-width: 100%;
   word-wrap: break-word;
-  box-shadow: var(--shadow-sm);
   position: relative;
 }
 
-.bubble.own {
-  background-color: var(--primary-color);
-  color: var(--bg-primary);
-  border-radius: var(--radius-xl) var(--radius-xl) var(--radius-sm) var(--radius-xl);
+.sent .messageBubble {
+  background: #0068ff;
+  border-bottom-right-radius: 4px;
 }
 
-.bubble.other {
-  background-color: var(--bg-tertiary);
-  color: var(--text-primary);
-  border-radius: var(--radius-xl) var(--radius-xl) var(--radius-xl) var(--radius-sm);
+.received .messageBubble {
+  background: #fff;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
-.text {
+.messageText {
   margin: 0;
-  font-size: var(--font-size-base);
-  line-height: var(--line-height-normal);
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
 }
 
-.timestamp {
-  font-size: var(--font-size-xs);
-  margin-top: var(--spacing-xs);
-  opacity: 0.7;
+.sent .messageText {
+  color: #fff;
 }
 
-.messageBubble.own .timestamp {
-  text-align: right;
+.stickerContainer {
+  padding: 4px;
 }
 
-.messageBubble.other .timestamp {
-  text-align: left;
+.sticker {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  object-fit: contain;
 }
 
-.image {
-  max-width: 100%;
-  max-height: 300px;
-  border-radius: var(--radius-lg);
-  margin-top: var(--spacing-sm);
-  object-fit: cover;
-  cursor: pointer;
-  transition: transform var(--transition-base);
+.messageFooter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
 }
 
-.image:hover {
-  transform: scale(1.02);
+.messageTime {
+  font-size: 11px;
+  color: #7589a3;
 }
 
-@media (max-width: 768px) {
-  .messageBubble {
-    margin-bottom: var(--spacing-sm);
-  }
-
-  .bubble {
-    max-width: 80%;
-    padding: var(--spacing-md);
-  }
-
-  .avatar {
-    width: 32px;
-    height: 32px;
-  }
-
-  .text {
-    font-size: var(--font-size-sm);
-  }
+.reactions {
+  display: flex;
+  gap: 4px;
+  background: #fff;
+  padding: 2px 6px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-@media (max-width: 480px) {
-  .bubble {
-    max-width: 85%;
-    padding: var(--spacing-sm) var(--spacing-md);
-  }
-
-  .text {
-    font-size: var(--font-size-sm);
-  }
-
-  .timestamp {
-    font-size: 10px;
-  }
+.reaction {
+  font-size: 14px;
 }

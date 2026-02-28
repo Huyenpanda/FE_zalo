@@ -5,10 +5,11 @@ import UserRoutes from './routes/UserRoutes';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import './styles/global.css';
-
+import { ChatProvider } from './services/context/ChatContext';
 function App() {
   return (
-    <div className="App">
+    <ChatProvider>
+<div className="App">
       <Router>
         <Routes>
        
@@ -17,6 +18,8 @@ function App() {
         </Routes>
       </Router>
     </div>
+    </ChatProvider>
+    
   );
 }
 

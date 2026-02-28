@@ -1,169 +1,101 @@
 .inputBox {
-  padding: var(--spacing-lg);
-  border-top: 1px solid var(--border-color);
-  background-color: var(--bg-primary);
+  background: #fff;
+  border-top: 1px solid #e5e5e5;
+  padding: 12px 20px;
+  flex-shrink: 0;
 }
 
 .inputContainer {
   display: flex;
-  align-items: flex-end;
-  gap: var(--spacing-md);
-  background-color: var(--bg-secondary);
-  border-radius: 24px;
-  padding: var(--spacing-sm) var(--spacing-md);
-  transition: all var(--transition-base);
-  border: 2px solid transparent;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.inputContainer:focus-within {
-  background-color: var(--bg-primary);
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px var(--primary-light);
+.inputActions {
+  display: flex;
+  gap: 4px;
+  padding: 4px 0;
 }
 
-.iconBtn {
+.actionBtn {
   width: 32px;
   height: 32px;
-  border-radius: var(--radius-full);
   border: none;
-  background-color: transparent;
-  color: var(--primary-color);
-  font-size: 18px;
+  background: transparent;
+  border-radius: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  transition: all var(--transition-base);
-  padding: 0;
+  transition: background 0.2s;
 }
 
-.iconBtn:hover {
-  background-color: var(--border-color);
-  transform: scale(1.1);
+.actionBtn:hover {
+  background: #f4f4f5;
 }
 
-.iconBtn:active {
-  transform: scale(0.95);
+.actionBtn i {
+  color: #7589a3;
+  font-size: 16px;
 }
 
-.textarea {
+.inputWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f4f4f5;
+  border-radius: 20px;
+  padding: 8px 16px;
+  transition: background 0.2s;
+}
+
+.inputWrapper:focus-within {
+  background: #fff;
+  box-shadow: 0 0 0 2px #0068ff;
+}
+
+.messageInput {
   flex: 1;
   border: none;
-  background-color: transparent;
+  background: transparent;
   outline: none;
-  font-size: var(--font-size-base);
-  font-family: inherit;
-  color: var(--text-primary);
-  resize: none;
-  max-height: 100px;
-  min-height: 20px;
-  padding: 6px 0;
-  line-height: var(--line-height-normal);
-  transition: color var(--transition-base);
+  font-size: 14px;
+  color: #333;
+  padding: 4px 0;
 }
 
-.textarea::placeholder {
-  color: var(--text-tertiary);
+.messageInput::placeholder {
+  color: #7589a3;
 }
 
-.textarea:focus {
-  outline: none;
-}
-
-.sendBtn {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-full);
-  border: none;
-  background-color: transparent;
-  color: var(--primary-color);
-  font-size: 18px;
-  cursor: pointer;
+.inputRightActions {
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: all var(--transition-base);
-  padding: 0;
+  gap: 8px;
 }
 
-.sendBtn:hover:not(:disabled) {
-  background-color: var(--primary-color);
-  color: var(--bg-primary);
-  transform: scale(1.1);
+.emojiBtn,
+.likeBtn {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: transform 0.2s;
+  line-height: 1;
 }
 
-.sendBtn:active:not(:disabled) {
-  transform: scale(0.95);
+.emojiBtn:hover,
+.likeBtn:hover {
+  transform: scale(1.2);
 }
 
-.sendBtn:disabled {
-  color: var(--text-light);
-  cursor: not-allowed;
-  opacity: 0.5;
+.emojiBtn {
+  filter: grayscale(1);
+  transition: filter 0.2s, transform 0.2s;
 }
 
-@media (max-width: 1024px) {
-  .inputBox {
-    padding: var(--spacing-md);
-  }
-
-  .inputContainer {
-    padding: var(--spacing-xs) var(--spacing-md);
-  }
-
-  .textarea {
-    font-size: var(--font-size-sm);
-  }
-
-  .iconBtn,
-  .sendBtn {
-    width: 28px;
-    height: 28px;
-    font-size: 16px;
-  }
-}
-
-@media (max-width: 768px) {
-  .inputBox {
-    padding: var(--spacing-md);
-  }
-
-  .inputContainer {
-    padding: 4px var(--spacing-sm);
-  }
-
-  .textarea {
-    font-size: var(--font-size-sm);
-  }
-
-  .iconBtn,
-  .sendBtn {
-    width: 28px;
-    height: 28px;
-    font-size: 16px;
-  }
-}
-
-@media (max-width: 480px) {
-  .inputBox {
-    padding: var(--spacing-sm);
-  }
-
-  .inputContainer {
-    gap: var(--spacing-sm);
-    padding: 4px var(--spacing-sm);
-  }
-
-  .textarea {
-    font-size: var(--font-size-sm);
-  }
-
-  .iconBtn,
-  .sendBtn {
-    width: 24px;
-    height: 24px;
-    font-size: 14px;
-  }
+.emojiBtn:hover {
+  filter: grayscale(0);
 }
