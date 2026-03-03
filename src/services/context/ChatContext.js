@@ -38,21 +38,52 @@ export const ChatProvider = ({ children }) => {
     {
       id: 101,
       conversationId: 1,
-      sender: { id: 999, name: 'LyLy' },
+      type: 'received',
+      contentType: 'text',
+      sender: { 
+        id: 999, 
+        name: 'LyLy',
+        avatar: 'https://ui-avatars.com/api/?name=LyLy&background=0084ff&color=fff'
+      },
       content: 'Xin chào 👋',
-      type: 'text',
       timestamp: new Date().toISOString(),
-      status: 'sent'
+      time: '21:10',
+      status: 'received',
+      reactions: []
     },
     {
       id: 102,
       conversationId: 1,
-      sender: { id: 1000, name: 'Bạn' },
+      type: 'sent',
+      contentType: 'text',
+      sender: { 
+        id: 1000, 
+        name: 'Bạn',
+        avatar: 'https://ui-avatars.com/api/?name=Ban&background=ff6b6b&color=fff'
+      },
       content: 'Chào bạn!',
-      type: 'text',
       timestamp: new Date().toISOString(),
-      status: 'sent'
-    }
+      time: '21:11',
+      status: 'sent',
+      isSticker: false,
+      reactions: []
+    },
+    {
+      id: 103,
+      conversationId: 3,
+      type: 'received',
+      contentType: 'text',
+      sender: { 
+        id: 999, 
+        name: 'LyLy',
+        avatar: 'https://ui-avatars.com/api/?name=LyLy&background=0084ff&color=fff'
+      },
+      content: 'Xin chào 👋',
+      timestamp: new Date().toISOString(),
+      time: '21:10',
+      status: 'received',
+      reactions: []
+    },
   ]);
 
   const [loading, setLoading] = useState(false); // hoặc true để test trạng thái loading
@@ -177,25 +208,39 @@ export const ChatProvider = ({ children }) => {
     }
   };
 
-  const sendMessage = async (content, type = 'text', attachments = []) => {
+  const sendMessage = async (content, contentType = 'text', attachments = []) => {
     if (!selectedChat) return;
 
     try {
+      // Create timestamp and extract time
+      const timestamp = new Date();
+      const timeStr = timestamp.toLocaleTimeString('vi-VN', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: false
+      });
+
       const messageData = {
         conversationId: selectedChat.id,
         content,
-        type,
+        contentType,
         attachments,
-        timestamp: new Date().toISOString()
+        timestamp: timestamp.toISOString()
       };
 
-      // Optimistic update - thêm tin nhắn vào UI ngay
+      // Optimistic update - Full message object with all properties
       const tempMessage = {
         id: `temp-${Date.now()}`,
-        ...messageData,
+        conversationId: selectedChat.id,
         type: 'sent',
+        contentType: contentType,
+        sender: currentUser,
+        content,
+        isSticker: contentType === 'sticker',
+        timestamp: timestamp.toISOString(),
+        time: timeStr,
         status: 'sending',
-        sender: currentUser
+        reactions: []
       };
       setMessages(prev => [...prev, tempMessage]);
 

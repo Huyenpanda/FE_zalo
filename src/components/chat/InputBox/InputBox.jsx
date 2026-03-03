@@ -44,7 +44,7 @@ const InputBox = () => {
     }, 3000);
   };
 
-  const handleFileUpload = async (e, type = 'file') => {
+  const handleFileUpload = async (e, uploadType = 'file') => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -56,8 +56,16 @@ const InputBox = () => {
         setUploadProgress(progress);
       });
 
-      // Send message with file attachment
-      await sendMessage(`[${type === 'image' ? 'Hình ảnh' : 'File'}]`, type, [{ url, name: file.name }]);
+      // Determine content type
+      const contentType = uploadType === 'image' ? 'image' : 'file';
+      const fileName = file.name;
+      
+      // Send message with attachment
+      await sendMessage(
+        uploadType === 'image' ? `[Hình ảnh: ${fileName}]` : `[File: ${fileName}]`, 
+        contentType, 
+        [{ url, name: fileName }]
+      );
       
     } catch (error) {
       console.error('Upload error:', error);

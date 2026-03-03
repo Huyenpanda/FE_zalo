@@ -1,46 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './ChatWindow.module.css';
 import MessageBubble from '../MessageBubble/MessageBubble';
 import InputBox from '../InputBox/InputBox';
+import { useChat } from '../../../services/context/ChatContext';
 
 const ChatWindow = ({ selectedChat }) => {
-  const [messages] = useState([
-    {
-      id: 1,
-      type: 'date',
-      content: 'T3 24/02/2026'
-    },
-    {
-      id: 2,
-      type: 'received',
-      content: 'sao thế',
-      time: '21:13',
-      sender: selectedChat?.name
-    },
-    {
-      id: 3,
-      type: 'sent',
-      content: 'xin lỗi lyyy',
-      time: '21:13'
-    },
-    {
-      id: 4,
-      type: 'sent',
-      content: 'https://sticker-example.com/sorry-sticker.png',
-      isSticker: true,
-      time: '21:14',
-      reactions: ['👍']
-    },
-    {
-      id: 5,
-      type: 'received',
-      content: 'oke oke',
-      time: '21:14',
-      sender: selectedChat?.name
-    }
-  ]);
-
+  const { messages, fetchMessages } = useChat();
   const [showInfo, setShowInfo] = useState(false);
+  const messagesEndRef = React.useRef(null);
+
+  // whenever selectedChat changes, load its messages
+  useEffect(() => {
+    if (selectedChat) {
+      fetchMessages(selectedChat.id);
+    }
+  }, [selectedChat, fetchMessages]);
+
+  // scroll to bottom when messages update
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
 
   return (
     <div className={styles.chatWindow}>
@@ -82,6 +63,7 @@ const ChatWindow = ({ selectedChat }) => {
           {messages.map((message) => (
             <MessageBubble key={message.id} message={message} />
           ))}
+          <div ref={messagesEndRef}></div>
         </div>
       </div>
 

@@ -1,0 +1,202 @@
+.panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 420px;
+  height: 100vh;
+  background: white;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+  z-index: 999;
+  animation: slideInRight 0.3s ease-out;
+  overflow-y: auto;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e5e5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+}
+
+.backBtn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #7589a3;
+  font-size: 16px;
+}
+
+.backBtn:hover {
+  background: #f4f4f5;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.body {
+  padding: 24px 20px;
+}
+
+.cloudInfo {
+  text-align: center;
+  padding: 30px 20px;
+}
+
+.cloudIcon {
+  font-size: 64px;
+  color: #0068ff;
+  margin-bottom: 16px;
+}
+
+.cloudInfo h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  color: #333;
+}
+
+.cloudInfo p {
+  margin: 0;
+  color: #7589a3;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.storage {
+  margin: 24px 0;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 12px;
+}
+
+.storageHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.storageBar {
+  height: 12px;
+  background: #e5e5e5;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.fill {
+  height: 100%;
+  display: flex;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.segment1 {
+  flex: 4;
+  background: #ff9800;
+}
+
+.segment2 {
+  flex: 3;
+  background: #4caf50;
+}
+
+.segment3 {
+  flex: 2;
+  background: #ffc107;
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: #7589a3;
+  flex-wrap: wrap;
+}
+
+.legend span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.viewBtn {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #0068ff;
+  background: white;
+  color: #0068ff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  margin: 16px 0;
+  transition: background 0.2s;
+}
+
+.viewBtn:hover {
+  background: #e5f1ff;
+}
+
+.tip {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: #fff9f0;
+  border-radius: 12px;
+  margin-top: 16px;
+}
+
+.tipIcon {
+  flex-shrink: 0;
+  color: #ffc107;
+  font-size: 24px;
+}
+
+.tipContent h4 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  color: #333;
+  font-weight: 600;
+}
+
+.tipContent p {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #7589a3;
+  line-height: 1.5;
+}
+
+.upgradeBtn {
+  padding: 8px 16px;
+  border: none;
+  background: #0068ff;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.upgradeBtn:hover {
+  background: #0056d9;
+}

@@ -1,16 +1,36 @@
 import React, { useState } from 'react';
 import styles from './Sidebar.module.css';
 
+import SettingsModal from '../Modals/SettingsModal';
+import CloudPanel from '../Modals/CloudPanel';
+import ToolsPanel from '../Modals/ToolsPanel';
+import ContactsModal from '../Modals/ContactsModal';
+
 const Sidebar = ({ conversations, selectedChat, onSelectChat }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [activeNav, setActiveNav] = useState('messages');
 
+    // Modal states
+  const [showSettings, setShowSettings] = useState(false);
+  const [showCloud, setShowCloud] = useState(false);
+  const [showTools, setShowTools] = useState(false);
+  const [showContacts, setShowContacts] = useState(false);
+
+  const handleLogout = () => {
+    // clear any user data here if needed
+    setShowSettings(false);
+    // redirect or perform logout logic
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  };
+  
   const filteredConversations = conversations.filter(conv =>
     conv.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
+    <>
     <div className={styles.sidebarContainer}>
       {/* Left Navigation Bar */}
       <div className={styles.leftNav}>
@@ -30,34 +50,40 @@ const Sidebar = ({ conversations, selectedChat, onSelectChat }) => {
 
           <button 
             className={`${styles.navItem} ${activeNav === 'contacts' ? styles.active : ''}`}
-            onClick={() => setActiveNav('contacts')}
+            onClick={() => { setActiveNav('contacts'); setShowContacts(true); }}
             title="Danh bạ"
           >
             <i className="fas fa-address-book"></i>
           </button>
 
-          <button 
-            className={`${styles.navItem} ${activeNav === 'todo' ? styles.active : ''}`}
-            onClick={() => setActiveNav('todo')}
-            title="To-do"
-          >
-            <i className="fas fa-check-square"></i>
-          </button>
         </div>
 
         <div className={styles.navBottom}>
-          <button className={styles.navItem} title="Cloud của tôi">
-            <i className="fas fa-cloud"></i>
-          </button>
+            <button 
+              className={styles.navItem} 
+              title="Cloud của tôi"
+              onClick={() => setShowCloud(true)}
+            >
+              <i className="fas fa-cloud"></i>
+            </button>
 
-          <button className={styles.navItem} title="Công cụ">
-            <i className="fas fa-briefcase"></i>
-          </button>
+            <button 
+              className={styles.navItem} 
+              title="Công cụ"
+              onClick={() => setShowTools(true)}
+            >
+              <i className="fas fa-briefcase"></i>
+            </button>
 
-          <button className={styles.navItem} title="Cài đặt">
-            <i className="fas fa-cog"></i>
-          </button>
-        </div>
+            <button 
+              className={styles.navItem} 
+              title="Cài đặt"
+              onClick={() => setShowSettings(true)}
+            >
+              <i className="fas fa-cog"></i>
+            </button>
+          </div>
+        
       </div>
 
       {/* Main Sidebar Content */}
@@ -162,6 +188,26 @@ const Sidebar = ({ conversations, selectedChat, onSelectChat }) => {
       </div>
     </div>
     </div>
+
+      {/* Modals & Panels */}
+      <SettingsModal 
+        isOpen={showSettings} 
+        onClose={() => setShowSettings(false)} 
+        onLogout={handleLogout}
+      />
+      <ContactsModal
+        isOpen={showContacts}
+        onClose={() => setShowContacts(false)}
+      />
+      <CloudPanel 
+        isOpen={showCloud} 
+        onClose={() => setShowCloud(false)} 
+      />
+      <ToolsPanel 
+        isOpen={showTools} 
+        onClose={() => setShowTools(false)} 
+      />
+    </>
   );
 };
 
