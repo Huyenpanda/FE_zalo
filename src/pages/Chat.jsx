@@ -1,35 +1,39 @@
-import React, { useEffect } from 'react';
+//Chat.jsx
+import React, { useEffect, useState } from 'react';
 import { useChat } from '../services/context/ChatContext';
 import styles from './Chat.module.css';
 import Sidebar from '../components/chat/Sidebar/Sidebar';
 import ChatWindow from '../components/chat/ChatWindow/ChatWindow';
+import Contacts from '../components/chat/Contacts/Contacts';
 
 const Chat = () => {
   const { 
     conversations, 
     selectedChat, 
     selectChat,
-    fetchConversations,
     loading 
   } = useChat();
+  // BỎ fetchConversations ở đây — ChatContext đã fetch trong useEffect rồi
 
-  useEffect(() => {
-    // Fetch conversations khi component mount
-    fetchConversations();
-  }, []);
+  const [currentView, setCurrentView] = useState('messages');
 
   return (
     <div className={styles.chatContainer}>
       <Sidebar 
         conversations={conversations}
         selectedChat={selectedChat}
-        onSelectChat={selectChat}
+        onSelectChat={selectChat} // đảm bảo đây là selectChat từ context
         loading={loading}
+        currentView={currentView}
+        onViewChange={setCurrentView}
       />
-      <ChatWindow 
-        selectedChat={selectedChat}
-        loading={loading}
-      />
+      {currentView === 'messages' && (
+        <ChatWindow 
+          selectedChat={selectedChat}
+          loading={loading}
+        />
+      )}
+      {currentView === 'contacts' && <Contacts onViewChange={setCurrentView} />}
     </div>
   );
 };

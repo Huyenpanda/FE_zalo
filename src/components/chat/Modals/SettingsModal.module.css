@@ -134,14 +134,18 @@
 
 /* additional helper styles */
 .backBtn {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border: none;
+   display: flex;    
+  justify-content: center;
+  align-items: center;
+  text-align: center;
   background: transparent;
   border-radius: 50%;
   cursor: pointer;
   color: #7589a3;
-  font-size: 16px;
+  font-size: 30px;
 }
 
 .backBtn:hover {

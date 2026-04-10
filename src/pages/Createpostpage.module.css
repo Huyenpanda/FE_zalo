@@ -1,0 +1,382 @@
+/* CreatePostPage.module.css */
+
+.page {
+  min-height: 100vh;
+  background: #fff;
+  max-width: 680px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HEADER ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e4e6ea;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 10;
+}
+.backBtn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #555;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.backBtn:hover { background: #f0f2f5; }
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111;
+  margin: 0;
+}
+.postBtn {
+  padding: 8px 20px;
+  border-radius: 20px;
+  border: none;
+  background: #e4e6eb;
+  color: #aaa;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: not-allowed;
+  transition: background 0.15s, color 0.15s;
+  min-width: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.postBtnActive {
+  background: #0084ff;
+  color: #fff;
+  cursor: pointer;
+}
+.postBtnActive:hover { background: #006fd6; }
+
+/* ── USER ROW ── */
+.userRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+}
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #ddd;
+}
+.userName {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 4px;
+}
+
+/* Privacy picker */
+.privacyWrap { position: relative; }
+.privacyBtn {
+  background: #e4e6eb;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.privacyBtn:hover { background: #d8dadf; }
+.privacyDropdown {
+  position: absolute;
+  top: 32px;
+  left: 0;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  min-width: 180px;
+  z-index: 50;
+  overflow: hidden;
+}
+.privacyOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  font-size: 14px;
+  cursor: pointer;
+  color: #111;
+  text-align: left;
+}
+.privacyOption:hover { background: #f5f5f5; }
+.privacyOptionActive { font-weight: 700; color: #0084ff; }
+.checkmark { color: #0084ff; font-weight: 700; }
+
+/* ── TEXTAREA ── */
+.textArea {
+  width: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 18px;
+  color: #111;
+  padding: 4px 16px 12px;
+  line-height: 1.5;
+  font-family: inherit;
+  box-sizing: border-box;
+  min-height: 120px;
+}
+.textArea::placeholder { color: #bbb; }
+
+/* ── IMAGE GRID ── */
+.imageGrid {
+  display: grid;
+  gap: 4px;
+  padding: 0 16px 12px;
+}
+.grid1 { grid-template-columns: 1fr; }
+.grid2 { grid-template-columns: 1fr 1fr; }
+.grid3 { grid-template-columns: 1fr 1fr 1fr; }
+
+.imageWrap {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f0f2f5;
+  aspect-ratio: 1;
+}
+.previewImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.removeImg {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.addMoreImg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f0f2f5;
+  border: 2px dashed #d0d2d5;
+  border-radius: 10px;
+  aspect-ratio: 1;
+  cursor: pointer;
+  font-size: 28px;
+  color: #888;
+  gap: 4px;
+  transition: background 0.15s;
+}
+.addMoreImg:hover { background: #e4e6eb; }
+.addMoreText { font-size: 12px; color: #888; }
+
+/* ── EXTRA ROWS (music, location) ── */
+.extraRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #f9f9f9;
+  border-radius: 10px;
+  margin: 0 16px 8px;
+  font-size: 14px;
+  color: #444;
+}
+.extraText { flex: 1; }
+.removeExtra {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+/* ── TOOLBAR ── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #e4e6ea;
+  border-radius: 12px;
+  margin: 8px 16px;
+  padding: 10px 14px;
+}
+.toolbarLabel {
+  font-size: 15px;
+  font-weight: 600;
+  color: #444;
+}
+.toolbarActions {
+  display: flex;
+  gap: 4px;
+}
+.toolBtn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.toolBtn:hover { background: #f0f2f5; }
+
+/* ── SPINNER ── */
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+/* ── TEXTAREA FOCUS EFFECT ── */
+.textArea:focus {
+  background: #fafafa;
+}
+
+/* ── IMAGE HOVER EFFECT ── */
+.imageWrap:hover .removeImg {
+  opacity: 1;
+}
+.removeImg {
+  opacity: 0.85;
+  transition: opacity 0.2s, transform 0.15s;
+}
+.removeImg:hover {
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+/* ── ADD IMAGE BUTTON EFFECT ── */
+.addMoreImg:active {
+  transform: scale(0.97);
+}
+
+/* ── TOOLBAR ACTIVE ── */
+.toolBtn:active {
+  transform: scale(0.9);
+}
+
+/* ── PRIVACY DROPDOWN ANIMATION ── */
+.privacyDropdown {
+  animation: fadeInScale 0.15s ease;
+}
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── SCROLLBAR (optional, đẹp hơn) ── */
+.page::-webkit-scrollbar {
+  width: 6px;
+}
+.page::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 6px;
+}
+.page::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
+
+/* ── MOBILE RESPONSIVE ── */
+@media (max-width: 480px) {
+  .page {
+    max-width: 100%;
+  }
+
+  .header {
+    padding: 10px 12px;
+  }
+
+  .title {
+    font-size: 16px;
+  }
+
+  .postBtn {
+    padding: 6px 14px;
+    font-size: 14px;
+  }
+
+  .userRow {
+    padding: 10px 12px;
+  }
+
+  .textArea {
+    font-size: 16px;
+    padding: 4px 12px 10px;
+  }
+
+  .toolbar {
+    margin: 6px 12px;
+    padding: 8px 10px;
+  }
+}
+
+/* ── DISABLED STATE (safety) ── */
+.postBtn:disabled {
+  opacity: 0.7;
+}
+
+/* ── SMOOTH TRANSITIONS GLOBAL ── */
+button, textarea {
+  transition: all 0.15s ease;
+}
+
+/* ── CLICK FEEDBACK ── */
+button:active {
+  transform: scale(0.97);
+}
+
+/* ── EXTRA ROW ICON STYLE ── */
+.extraRow span:first-child {
+  font-size: 18px;
+}
+
+/* ── EMPTY STATE IMAGE GRID FIX ── */
+.imageGrid:empty {
+  display: none;
+}

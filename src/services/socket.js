@@ -1,3 +1,4 @@
+//socket.js
 import { io } from 'socket.io-client';
 
 class SocketService {
@@ -16,7 +17,7 @@ class SocketService {
       return this.socket;
     }
 
-    const socketUrl = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000';
+    const socketUrl = process.env.REACT_APP_SOCKET_URL || 'http://localhost:50646';
     const token = localStorage.getItem('token');
 
     this.socket = io(socketUrl, {
@@ -204,6 +205,16 @@ class SocketService {
   joinConversation(conversationId) {
     if (!this.socket) return;
     this.socket.emit('conversation:join', conversationId);
+  }
+
+  /**
+   * Tham gia user room
+   * @param {string|number} userId
+   */
+  joinUser(userId) {
+    if (!this.socket) return;
+    if (!userId) return;
+    this.socket.emit('user:join', userId);
   }
 
   /**

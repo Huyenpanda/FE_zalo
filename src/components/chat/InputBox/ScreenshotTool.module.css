@@ -1,0 +1,135 @@
+.screenshotOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.screenshotModal {
+  background: #fff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.screenshotHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e5e5e5;
+  background: #f9f9f9;
+}
+
+.screenshotHeader h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #7589a3;
+  padding: 4px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.closeBtn:hover {
+  background: #e5e7eb;
+}
+
+.screenshotContent {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.icon {
+  font-size: 64px;
+  color: #0068ff;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.icon.loading {
+  color: #ffa500;
+}
+
+.icon.success {
+  color: #44c553;
+}
+
+.icon.error {
+  color: #ff3b30;
+}
+
+.screenshotContent h4 {
+  margin: 12px 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.screenshotContent p {
+  margin: 0;
+  font-size: 13px;
+  color: #7589a3;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 20px;
+  border-top: 1px solid #e5e5e5;
+}
+
+.cancelBtn,
+.captureBtn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cancelBtn {
+  background: #e5e7eb;
+  color: #333;
+  flex: 1;
+}
+
+.cancelBtn:hover {
+  background: #d1d5db;
+}
+
+.captureBtn {
+  background: #0068ff;
+  color: #fff;
+  flex: 1;
+}
+
+.captureBtn:hover {
+  background: #0052cc;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 104, 255, 0.3);
+}

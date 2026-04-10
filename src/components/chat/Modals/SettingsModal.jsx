@@ -9,10 +9,7 @@ const SettingsModal = ({ isOpen, onClose, onLogout }) => {
 
   const handleLogout = () => {
     if (onLogout) {
-      onLogout(() => {
-        // After logout callback, redirect to login
-        window.location.href = '/login';
-      });
+      onLogout();
     } else {
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -71,7 +68,7 @@ const SettingsModal = ({ isOpen, onClose, onLogout }) => {
 
   const renderAccount = () => (
     <div className={styles.modalBody}>
-      <button className={styles.backBtn} onClick={() => setView('main')}>&larr; Quay lại</button>
+      <button className={styles.backBtn} onClick={() => setView('main')}>&larr;</button>
       <div className={styles.accountHeader}>
         <div className={styles.avatarWrapper}>
           <img
@@ -93,7 +90,7 @@ const SettingsModal = ({ isOpen, onClose, onLogout }) => {
 
   const renderSettings = () => (
     <div className={styles.modalBody}>
-      <button className={styles.backBtn} onClick={() => setView('main')}>&larr; Quay lại</button>
+      <button className={styles.backBtn} onClick={() => setView('main')}>&larr;</button>
       <ul className={styles.supportList}>
         <li className={styles.supportItem}>Cài đặt chung</li>
         <li className={styles.supportItem}>Quyền riêng tư</li>
@@ -107,7 +104,7 @@ const SettingsModal = ({ isOpen, onClose, onLogout }) => {
 
   const renderLanguage = () => (
     <div className={styles.modalBody}>
-      <button className={styles.backBtn} onClick={() => setView('main')}>&larr; Quay lại</button>
+      <button className={styles.backBtn} onClick={() => setView('main')}>&larr;</button>
       <div
         className={`${styles.languageOption} ${language === 'vi' ? styles.selected : ''}`}
         onClick={() => setLanguage('vi')}
@@ -125,7 +122,7 @@ const SettingsModal = ({ isOpen, onClose, onLogout }) => {
 
   const renderSupport = () => (
     <div className={styles.modalBody}>
-      <button className={styles.backBtn} onClick={() => setView('main')}>&larr; Quay lại</button>
+      <button className={styles.backBtn} onClick={() => setView('main')}>&larr;</button>
       <ul className={styles.supportList}>
         <li className={styles.supportItem}>Thông tin phiên bản</li>
         <li className={styles.supportItem}>Liên hệ</li>

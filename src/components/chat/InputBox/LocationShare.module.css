@@ -1,0 +1,189 @@
+.locationOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.locationModal {
+  background: #fff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.locationHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e5e5e5;
+  background: #f9f9f9;
+}
+
+.locationHeader h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #7589a3;
+  padding: 4px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.closeBtn:hover {
+  background: #e5e7eb;
+}
+
+.locationContent {
+  padding: 20px;
+}
+
+.locationInfo {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.locationInfo i {
+  display: block;
+  font-size: 48px;
+  color: #0068ff;
+  margin-bottom: 16px;
+}
+
+.locationInfo p {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.note {
+  color: #7589a3;
+  font-size: 12px !important;
+}
+
+.locationSelected {
+  margin-bottom: 16px;
+}
+
+.mapPreview {
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  border: 1px solid #e5e5e5;
+}
+
+.mapImage {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  display: block;
+}
+
+.locationDetails {
+  background: #f0f2f5;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.locationDetails p {
+  margin: 6px 0;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.locationDetails i {
+  color: #0068ff;
+  width: 16px;
+}
+
+.accuracy {
+  color: #7589a3;
+  font-size: 11px !important;
+}
+
+.errorMessage {
+  background: #fee;
+  border: 1px solid #fcc;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 16px;
+  color: #d32f2f;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.errorMessage i {
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid #e5e5e5;
+}
+
+.cancelBtn,
+.shareBtn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cancelBtn {
+  background: #e5e7eb;
+  color: #333;
+}
+
+.cancelBtn:hover {
+  background: #d1d5db;
+}
+
+.shareBtn {
+  background: #0068ff;
+  color: #fff;
+}
+
+.shareBtn:hover:not(:disabled) {
+  background: #0052cc;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 104, 255, 0.3);
+}
+
+.shareBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

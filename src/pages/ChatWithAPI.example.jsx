@@ -179,7 +179,7 @@ export default ChatWithAPI;
  * Create a .env file in your project root with:
  * REACT_APP_API_URL=http://your-api-server.com/api
  * 
- * Or use default: http://localhost:5000/api
+ * Or use default: http://localhost:50646/api
  */
 
 /**

@@ -1,21 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './Sidebar.module.css';
 
 import SettingsModal from '../Modals/SettingsModal';
 import CloudPanel from '../Modals/CloudPanel';
 import ToolsPanel from '../Modals/ToolsPanel';
-import ContactsModal from '../Modals/ContactsModal';
-
-const Sidebar = ({ conversations, selectedChat, onSelectChat }) => {
+import { useChat } from '../../../services/context/ChatContext';
+import { useNavigate } from 'react-router-dom';
+const Sidebar = ({ conversations, selectedChat, onSelectChat, onViewChange, currentView }) => {
+  const navigate = useNavigate();
+  const { currentUser } = useChat(); //
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
-  const [activeNav, setActiveNav] = useState('messages');
+  const [activeNav, setActiveNav] = useState(currentView || 'messages');
 
     // Modal states
   const [showSettings, setShowSettings] = useState(false);
   const [showCloud, setShowCloud] = useState(false);
   const [showTools, setShowTools] = useState(false);
-  const [showContacts, setShowContacts] = useState(false);
 
   const handleLogout = () => {
     // clear any user data here if needed
@@ -29,6 +30,26 @@ const Sidebar = ({ conversations, selectedChat, onSelectChat }) => {
     conv.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleContactsClick = () => {
+    setActiveNav('contacts');
+    if (onViewChange) {
+      onViewChange('contacts');
+    }
+  };
+
+  const handleMessagesClick = () => {
+    setActiveNav('messages');
+    if (onViewChange) {
+      onViewChange('messages');
+    }
+  };
+
+  const isContactsView = currentView === 'contacts';
+
+  useEffect(() => {
+    setActiveNav(currentView);
+  }, [currentView]);
+
   return (
     <>
     <div className={styles.sidebarContainer}>
@@ -36,12 +57,20 @@ const Sidebar = ({ conversations, selectedChat, onSelectChat }) => {
       <div className={styles.leftNav}>
         <div className={styles.navTop}>
           <div className={styles.userAvatar}>
-            <img src="https://ui-avatars.com/api/?name=User&background=0084ff&color=fff" alt="User" />
+         
+
+
+<img
+  src={currentUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.fullName || 'User')}&background=0084ff&color=fff`} 
+    alt="User" 
+  onClick={() => navigate('/profile')}
+  style={{ cursor: 'pointer' }}
+/>
           </div>
           
           <button 
             className={`${styles.navItem} ${activeNav === 'messages' ? styles.active : ''}`}
-            onClick={() => setActiveNav('messages')}
+            onClick={handleMessagesClick}
             title="Tin nhắn"
           >
             <i className="fas fa-comment-dots"></i>
@@ -50,7 +79,7 @@ const Sidebar = ({ conversations, selectedChat, onSelectChat }) => {
 
           <button 
             className={`${styles.navItem} ${activeNav === 'contacts' ? styles.active : ''}`}
-            onClick={() => { setActiveNav('contacts'); setShowContacts(true); }}
+            onClick={handleContactsClick}
             title="Danh bạ"
           >
             <i className="fas fa-address-book"></i>
@@ -86,13 +115,21 @@ const Sidebar = ({ conversations, selectedChat, onSelectChat }) => {
         
       </div>
 
-      {/* Main Sidebar Content */}
-      <div className={styles.sidebar}>
-      {/* Header */}
+      {!isContactsView && (
+        <div className={styles.sidebar}>
+          {/* Header */}
       <div className={styles.header}>
         <div className={styles.userProfile}>
           <div className={styles.avatar}>
-            <img src="https://ui-avatars.com/api/?name=User&background=0084ff&color=fff" alt="User" />
+            
+
+<img
+  src={currentUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.fullName || 'User')}&background=0084ff&color=fff`} 
+    alt="User" 
+  onClick={() => navigate('/profile')}
+  style={{ cursor: 'pointer' }}
+/>
+           
             <div className={styles.onlineStatus}></div>
           </div>
         </div>
@@ -186,7 +223,8 @@ const Sidebar = ({ conversations, selectedChat, onSelectChat }) => {
           </div>
         ))}
       </div>
-    </div>
+      </div>
+      )}
     </div>
 
       {/* Modals & Panels */}
@@ -194,10 +232,6 @@ const Sidebar = ({ conversations, selectedChat, onSelectChat }) => {
         isOpen={showSettings} 
         onClose={() => setShowSettings(false)} 
         onLogout={handleLogout}
-      />
-      <ContactsModal
-        isOpen={showContacts}
-        onClose={() => setShowContacts(false)}
       />
       <CloudPanel 
         isOpen={showCloud} 

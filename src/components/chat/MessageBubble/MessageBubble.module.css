@@ -138,3 +138,132 @@
 .reaction {
   font-size: 14px;
 }
+
+/* Attachment Styles */
+.attachmentContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* Image Attachment */
+.imageAttachmentWrapper {
+  position: relative;
+  display: inline-block;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.imageAttachment {
+  border-radius: 12px;
+  overflow: hidden;
+  max-width: 300px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.attachmentImage {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.attachmentImage:hover {
+  transform: scale(1.02);
+}
+
+.imageDownloadBtn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  text-decoration: none;
+}
+
+.imageDownloadBtn:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: scale(1.1);
+}
+
+/* File Attachment */
+.fileAttachment {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f0f2f5;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.2s, transform 0.2s;
+  cursor: pointer;
+  max-width: 280px;
+}
+
+.fileAttachment:hover {
+  background: #e4e6eb;
+  transform: translateY(-2px);
+}
+
+.fileIcon {
+  width: 40px;
+  height: 40px;
+  background: #0068ff;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.fileInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.fileName {
+  font-size: 13px;
+  font-weight: 500;
+  color: #000;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fileSize {
+  font-size: 11px;
+  color: #7589a3;
+}
+
+.downloadIcon {
+  width: 32px;
+  height: 32px;
+  background: #0068ff;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.fileAttachment:hover .downloadIcon {
+  background: #0052cc;
+}
