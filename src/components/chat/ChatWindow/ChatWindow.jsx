@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import styles from './ChatWindow.module.css';
 import MessageBubble from '../MessageBubble/MessageBubble';
 import InputBox from '../InputBox/InputBox';
@@ -23,13 +23,26 @@ const { messages, fetchMessages, currentUser } = useChat();
   const [callState, setCallState] = useState({ active: false, type: null, status: 'đang gọi' });
   const messagesEndRef = React.useRef(null);
 
-  const filteredMessages = messages.filter(msg => {
+  const sortedMessages = useMemo(() => {
+    const getTime = (message) => {
+      const time = Date.parse(message?.createdAt);
+      return Number.isFinite(time) ? time : 0;
+    };
+
+    return [...messages].sort((a, b) => getTime(a) - getTime(b));
+  }, [messages]);
+
+  const filteredMessages = sortedMessages.filter(msg => {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase();
     return msg.content?.toLowerCase().includes(query) || 
            msg.sender?.name?.toLowerCase().includes(query);
   });
 
+  const currentChatMessages = useMemo(() => {
+    if (!selectedChat) return [];
+    return sortedMessages.filter(message => message.conversationId === selectedChat.id);
+  }, [sortedMessages, selectedChat]);
 
 
   // scroll to bottom when messages update
@@ -224,15 +237,13 @@ const { messages, fetchMessages, currentUser } = useChat();
         <div className={styles.messagesList}>
           {
             selectedChat ? (
-              messages
-                .filter(message => message.conversationId === selectedChat.id)
-                .map((message) => (
-                  <MessageBubble
-                    key={message._id || message.id}
-                    message={message}
-                    currentUserId={currentUser?.id}
-                  />
-                ))
+              currentChatMessages.map((message) => (
+                <MessageBubble
+                  key={message._id || message.id}
+                  message={message}
+                  currentUserId={currentUser?.id}
+                />
+              ))
             ) : (
               <div className={styles.emptyChatPlaceholder}>
                 <p>Chưa có cuộc trò chuyện được chọn. Vui lòng chọn một cuộc trò chuyện ở cột bên trái.</p>

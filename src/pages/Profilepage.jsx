@@ -270,6 +270,9 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('posts');
   const [scrolled, setScrolled] = useState(false);
+  const [activeCommentPostId, setActiveCommentPostId] = useState(null);
+  const [commentDraft, setCommentDraft] = useState('');
+  const [commentsByPost, setCommentsByPost] = useState({});
   const coverRef = useRef(null);
 
   const isMe = !userId || String(userId) === String(authUser?.id);
@@ -427,10 +430,54 @@ export default function ProfilePage() {
         await api.delete(`/posts/${post.id}`);
       }
       setPosts(prev => prev.filter(p => p.id !== post.id));
+      if (post.id === activeCommentPostId) {
+        setActiveCommentPostId(null);
+        setCommentDraft('');
+      }
     } catch (err) {
       alert('Xóa thất bại: ' + err.message);
     }
   };
+
+  const openComments = (post) => {
+    setActiveCommentPostId(post.id);
+    setCommentDraft('');
+  };
+
+  const closeComments = () => {
+    setActiveCommentPostId(null);
+    setCommentDraft('');
+  };
+
+  const handleSendComment = (postId) => {
+    const content = commentDraft.trim();
+    if (!content) return;
+
+    const newComment = {
+      id: `comment-${Date.now()}`,
+      user: {
+        id: authUser?.id || 'me',
+        name: authUser?.fullName || 'Bạn',
+        avatar: authUser?.avatar || profileUser?.avatar || '',
+      },
+      content,
+      createdAt: new Date().toISOString(),
+    };
+
+    setCommentsByPost(prev => ({
+      ...prev,
+      [postId]: [newComment, ...(prev[postId] || [])],
+    }));
+
+    setPosts(prev => prev.map(post =>
+      post.id === postId
+        ? { ...post, comments: (Number(post.comments) || 0) + 1 }
+        : post
+    ));
+
+    setCommentDraft('');
+  };
+
   const handleMessage = () => {
     if (!profileUser?.id) return;
     navigate(`/messages/${profileUser.id}`);
@@ -484,12 +531,71 @@ export default function ProfilePage() {
           {posts.length === 0
             ? <div className={styles.emptyPosts}>Chưa có bài viết nào</div>
             : posts.map(post => (
-              <PostItem key={post.id} post={post}
-                currentUserId={profileUser?.id}
-                onLike={handleLike}
-                onComment={() => navigate(`/post/${post.id}`)}
-                onDelete={handleDelete}
-              />
+              <React.Fragment key={post.id}>
+                <PostItem
+                  post={post}
+                  currentUserId={profileUser?.id}
+                  onLike={handleLike}
+                  onComment={() => openComments(post)}
+                  onDelete={handleDelete}
+                />
+                {activeCommentPostId === post.id && (
+                  <div className={styles.commentPanel}>
+                    <div className={styles.commentPanelHeader}>
+                      <div>
+                        <strong>Bình luận</strong>
+                        <span>{` ${post.comments || 0} bình luận`}</span>
+                      </div>
+                      <button className={styles.closeCommentBtn} onClick={closeComments}>
+                        ✕
+                      </button>
+                    </div>
+                    <div className={styles.commentList}>
+                      {(commentsByPost[post.id] || []).length > 0 ? (
+                        commentsByPost[post.id].map(comment => (
+                          <div key={comment.id} className={styles.commentItem}>
+                            <img
+                              src={comment.user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.user.name || 'U')}&background=0084ff&color=fff`}
+                              alt={comment.user.name}
+                              className={styles.commentAvatar}
+                            />
+                            <div className={styles.commentContent}>
+                              <div className={styles.commentMeta}>
+                                <strong>{comment.user.name}</strong>
+                                <span>{formatTime(comment.createdAt)}</span>
+                              </div>
+                              <p>{comment.content}</p>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className={styles.noComments}>Hãy là người đầu tiên bình luận.</div>
+                      )}
+                    </div>
+                    <div className={styles.commentInputRow}>
+                      <img
+                        src={authUser?.avatar || profileUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(authUser?.fullName || 'Bạn')}&background=0084ff&color=fff`}
+                        alt={authUser?.fullName || 'Bạn'}
+                        className={styles.commentAvatar}
+                      />
+                      <input
+                        type="text"
+                        value={commentDraft}
+                        onChange={(e) => setCommentDraft(e.target.value)}
+                        placeholder="Viết bình luận..."
+                        className={styles.commentInput}
+                      />
+                      <button
+                        className={styles.sendCommentBtn}
+                        onClick={() => handleSendComment(post.id)}
+                        disabled={!commentDraft.trim()}
+                      >
+                        Gửi
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </React.Fragment>
             ))
           }
         </div>
