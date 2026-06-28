@@ -7,9 +7,17 @@ import { useNavigate } from 'react-router-dom';
 
 const ChatWindow = ({ selectedChat }) => {
   const navigate = useNavigate();
-  // Thêm currentUser từ useChat
-const { messages, fetchMessages, currentUser } = useChat();
+  const { messages, fetchMessages, currentUser, isInitializing } = useChat();
 
+  // Đọc thẳng từ localStorage để tránh stale state
+  const currentUserId = React.useMemo(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      return String(u.id || u._id || currentUser?.id || '');
+    } catch {
+      return String(currentUser?.id || '');
+    }
+  }, []); // [] vì user không đổi trong session
 
   const [showInfo, setShowInfo] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -39,12 +47,17 @@ const { messages, fetchMessages, currentUser } = useChat();
            msg.sender?.name?.toLowerCase().includes(query);
   });
 
-  const currentChatMessages = useMemo(() => {
-    if (!selectedChat) return [];
-    return sortedMessages.filter(message => message.conversationId === selectedChat.id);
-  }, [sortedMessages, selectedChat]);
+  // ChatWindow.jsx - bỏ filter conversationId, dùng thẳng sortedMessages
+const currentChatMessages = useMemo(() => {
+  if (!selectedChat) return [];
+  // Bỏ filter vì messages trong context luôn là của selectedChat hiện tại
+  return sortedMessages;
+}, [sortedMessages, selectedChat]);
 
-
+  // ChatWindow.jsx - thêm ngay trước return
+  console.log('selectedChat.id:', selectedChat?.id, typeof selectedChat?.id);
+  console.log('messages:', messages.map(m => ({ convId: m.conversationId, type: typeof m.conversationId })));
+  console.log('currentChatMessages length:', currentChatMessages.length);
   // scroll to bottom when messages update
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -83,7 +96,12 @@ const { messages, fetchMessages, currentUser } = useChat();
       date: '06/06'
     }
   ];
-
+console.log('=== ChatWindow render ===');
+console.log('messages count:', messages.length);
+console.log('sortedMessages count:', sortedMessages.length);  
+console.log('currentChatMessages count:', currentChatMessages.length);
+console.log('currentUser:', currentUser?.id);
+console.log('first message:', messages[0]);
   return (
     <div className={styles.chatWindow}>
       {/* Header */}
@@ -234,14 +252,14 @@ const { messages, fetchMessages, currentUser } = useChat();
 
       {/* Messages Area */}
       <div className={styles.messagesContainer}>
-        <div className={styles.messagesList}>
+        <div className={styles.messagesList} key={currentUser?.id || 'loading'}>
           {
             selectedChat ? (
               currentChatMessages.map((message) => (
                 <MessageBubble
                   key={message._id || message.id}
                   message={message}
-                  currentUserId={currentUser?.id}
+                  currentUserId={currentUserId}
                 />
               ))
             ) : (

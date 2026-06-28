@@ -2,172 +2,109 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import socketService from '../socket';
 import api from '../api';
-import axios from 'axios'; 
+
 const ChatContext = createContext();
 
 // ============================================================
-// MOCK DATA — tồn tại song song với API data
-// ID bắt đầu bằng "mock-" để không bao giờ trùng với DB
+// MOCK DATA
 // ============================================================
 const MOCK_CONVERSATIONS = [
   {
-    id: 'mock-conv-1',
-    userId: 'mock-user-1',
-    name: 'Nguyễn Thị Lan',
+    id: 'mock-conv-1', userId: 'mock-user-1', name: 'Nguyễn Thị Lan',
     avatar: 'https://ui-avatars.com/api/?name=Nguyen+Thi+Lan&background=0084ff&color=fff',
-    lastMessage: 'Bạn ơi tối nay rảnh không?',
-    time: '2 phút',
-    online: true,
-    unread: 2,
-    type: 'PRIVATE',
-    group: false,
-    isMock: true,
+    lastMessage: 'Bạn ơi tối nay rảnh không?', time: '2 phút',
+    online: true, unread: 2, type: 'PRIVATE', group: false, isMock: true,
   },
   {
-    id: 'mock-conv-2',
-    userId: 'mock-user-2',
-    name: 'Trần Văn Minh',
+    id: 'mock-conv-2', userId: 'mock-user-2', name: 'Trần Văn Minh',
     avatar: 'https://ui-avatars.com/api/?name=Tran+Van+Minh&background=ff6b6b&color=fff',
-    lastMessage: 'Ok bạn nhé, để tôi xem lại code',
-    time: '1 giờ',
-    online: false,
-    unread: 0,
-    type: 'PRIVATE',
-    group: false,
-    isMock: true,
+    lastMessage: 'Ok bạn nhé, để tôi xem lại code', time: '1 giờ',
+    online: false, unread: 0, type: 'PRIVATE', group: false, isMock: true,
   },
   {
-    id: 'mock-conv-3',
-    userId: null,
-    name: 'Nhóm Dự Án Zola',
+    id: 'mock-conv-3', userId: null, name: 'Nhóm Dự Án Zola',
     avatar: 'https://ui-avatars.com/api/?name=Zola+Team&background=00b894&color=fff',
-    lastMessage: 'Minh: Đã push code lên rồi nhé mọi người',
-    time: '3 giờ',
-    online: false,
-    unread: 5,
-    type: 'GROUP',
-    group: true,
-    isMock: true,
+    lastMessage: 'Minh: Đã push code lên rồi nhé mọi người', time: '3 giờ',
+    online: false, unread: 5, type: 'GROUP', group: true, isMock: true,
   },
   {
-    id: 'mock-conv-4',
-    userId: 'mock-user-4',
-    name: 'Lê Hoàng Nam',
+    id: 'mock-conv-4', userId: 'mock-user-4', name: 'Lê Hoàng Nam',
     avatar: 'https://ui-avatars.com/api/?name=Le+Hoang+Nam&background=6c5ce7&color=fff',
-    lastMessage: 'Cảm ơn bạn nhiều lắm!',
-    time: '1 ngày',
-    online: true,
-    unread: 0,
-    type: 'PRIVATE',
-    group: false,
-    isMock: true,
+    lastMessage: 'Cảm ơn bạn nhiều lắm!', time: '1 ngày',
+    online: true, unread: 0, type: 'PRIVATE', group: false, isMock: true,
   },
 ];
 
-// Mock messages theo từng conversation
 const MOCK_MESSAGES = {
   'mock-conv-1': [
     {
-      id: 'mock-msg-1-1', _id: 'mock-msg-1-1',
-      conversationId: 'mock-conv-1',
-      content: 'Chào bạn! 👋',
-      senderId: 'mock-user-1',
+      id: 'mock-msg-1-1', _id: 'mock-msg-1-1', conversationId: 'mock-conv-1',
+      content: 'Chào bạn! 👋', senderId: 'mock-user-1',
       sender: { _id: 'mock-user-1', fullName: 'Nguyễn Thị Lan', avatar: 'https://ui-avatars.com/api/?name=Lan&background=0084ff&color=fff' },
-      type: 'TEXT', isRead: true,
-      createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+      type: 'TEXT', isRead: true, createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
     },
     {
-      id: 'mock-msg-1-2', _id: 'mock-msg-1-2',
-      conversationId: 'mock-conv-1',
-      content: 'Chào Lan! Lâu rồi không gặp 😄',
-      senderId: 'me',
-      sender: null,
-      type: 'TEXT', isRead: true,
-      createdAt: new Date(Date.now() - 3600000 * 1.9).toISOString(),
+      id: 'mock-msg-1-2', _id: 'mock-msg-1-2', conversationId: 'mock-conv-1',
+      content: 'Chào Lan! Lâu rồi không gặp 😄', senderId: 'me', sender: null,
+      type: 'TEXT', isRead: true, createdAt: new Date(Date.now() - 3600000 * 1.9).toISOString(),
     },
     {
-      id: 'mock-msg-1-3', _id: 'mock-msg-1-3',
-      conversationId: 'mock-conv-1',
-      content: 'Bạn ơi tối nay rảnh không?',
-      senderId: 'mock-user-1',
+      id: 'mock-msg-1-3', _id: 'mock-msg-1-3', conversationId: 'mock-conv-1',
+      content: 'Bạn ơi tối nay rảnh không?', senderId: 'mock-user-1',
       sender: { _id: 'mock-user-1', fullName: 'Nguyễn Thị Lan', avatar: 'https://ui-avatars.com/api/?name=Lan&background=0084ff&color=fff' },
-      type: 'TEXT', isRead: false,
-      createdAt: new Date(Date.now() - 120000).toISOString(),
+      type: 'TEXT', isRead: false, createdAt: new Date(Date.now() - 120000).toISOString(),
     },
   ],
   'mock-conv-2': [
     {
-      id: 'mock-msg-2-1', _id: 'mock-msg-2-1',
-      conversationId: 'mock-conv-2',
-      content: 'Minh ơi, cái bug hôm qua fix chưa?',
-      senderId: 'me',
-      sender: null,
-      type: 'TEXT', isRead: true,
-      createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+      id: 'mock-msg-2-1', _id: 'mock-msg-2-1', conversationId: 'mock-conv-2',
+      content: 'Minh ơi, cái bug hôm qua fix chưa?', senderId: 'me', sender: null,
+      type: 'TEXT', isRead: true, createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
     },
     {
-      id: 'mock-msg-2-2', _id: 'mock-msg-2-2',
-      conversationId: 'mock-conv-2',
-      content: 'Ok bạn nhé, để tôi xem lại code',
-      senderId: 'mock-user-2',
+      id: 'mock-msg-2-2', _id: 'mock-msg-2-2', conversationId: 'mock-conv-2',
+      content: 'Ok bạn nhé, để tôi xem lại code', senderId: 'mock-user-2',
       sender: { _id: 'mock-user-2', fullName: 'Trần Văn Minh', avatar: 'https://ui-avatars.com/api/?name=Minh&background=ff6b6b&color=fff' },
-      type: 'TEXT', isRead: true,
-      createdAt: new Date(Date.now() - 3600000).toISOString(),
+      type: 'TEXT', isRead: true, createdAt: new Date(Date.now() - 3600000).toISOString(),
     },
   ],
   'mock-conv-3': [
     {
-      id: 'mock-msg-3-1', _id: 'mock-msg-3-1',
-      conversationId: 'mock-conv-3',
-      content: 'Mọi người ơi, họp lúc 3h chiều nhé!',
-      senderId: 'mock-user-1',
+      id: 'mock-msg-3-1', _id: 'mock-msg-3-1', conversationId: 'mock-conv-3',
+      content: 'Mọi người ơi, họp lúc 3h chiều nhé!', senderId: 'mock-user-1',
       sender: { _id: 'mock-user-1', fullName: 'Nguyễn Thị Lan', avatar: 'https://ui-avatars.com/api/?name=Lan&background=0084ff&color=fff' },
-      type: 'TEXT', isRead: true,
-      createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+      type: 'TEXT', isRead: true, createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
     },
     {
-      id: 'mock-msg-3-2', _id: 'mock-msg-3-2',
-      conversationId: 'mock-conv-3',
-      content: 'Đã push code lên rồi nhé mọi người',
-      senderId: 'mock-user-2',
+      id: 'mock-msg-3-2', _id: 'mock-msg-3-2', conversationId: 'mock-conv-3',
+      content: 'Đã push code lên rồi nhé mọi người', senderId: 'mock-user-2',
       sender: { _id: 'mock-user-2', fullName: 'Trần Văn Minh', avatar: 'https://ui-avatars.com/api/?name=Minh&background=ff6b6b&color=fff' },
-      type: 'TEXT', isRead: false,
-      createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+      type: 'TEXT', isRead: false, createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
     },
   ],
   'mock-conv-4': [
     {
-      id: 'mock-msg-4-1', _id: 'mock-msg-4-1',
-      conversationId: 'mock-conv-4',
-      content: 'Bạn giúp mình vấn đề này được không?',
-      senderId: 'mock-user-4',
+      id: 'mock-msg-4-1', _id: 'mock-msg-4-1', conversationId: 'mock-conv-4',
+      content: 'Bạn giúp mình vấn đề này được không?', senderId: 'mock-user-4',
       sender: { _id: 'mock-user-4', fullName: 'Lê Hoàng Nam', avatar: 'https://ui-avatars.com/api/?name=Nam&background=6c5ce7&color=fff' },
-      type: 'TEXT', isRead: true,
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
+      type: 'TEXT', isRead: true, createdAt: new Date(Date.now() - 86400000).toISOString(),
     },
     {
-      id: 'mock-msg-4-2', _id: 'mock-msg-4-2',
-      conversationId: 'mock-conv-4',
-      content: 'Được, bạn cứ nói đi nhé!',
-      senderId: 'me',
-      sender: null,
-      type: 'TEXT', isRead: true,
-      createdAt: new Date(Date.now() - 86400000 + 60000).toISOString(),
+      id: 'mock-msg-4-2', _id: 'mock-msg-4-2', conversationId: 'mock-conv-4',
+      content: 'Được, bạn cứ nói đi nhé!', senderId: 'me', sender: null,
+      type: 'TEXT', isRead: true, createdAt: new Date(Date.now() - 86400000 + 60000).toISOString(),
     },
     {
-      id: 'mock-msg-4-3', _id: 'mock-msg-4-3',
-      conversationId: 'mock-conv-4',
-      content: 'Cảm ơn bạn nhiều lắm!',
-      senderId: 'mock-user-4',
+      id: 'mock-msg-4-3', _id: 'mock-msg-4-3', conversationId: 'mock-conv-4',
+      content: 'Cảm ơn bạn nhiều lắm!', senderId: 'mock-user-4',
       sender: { _id: 'mock-user-4', fullName: 'Lê Hoàng Nam', avatar: 'https://ui-avatars.com/api/?name=Nam&background=6c5ce7&color=fff' },
-      type: 'TEXT', isRead: true,
-      createdAt: new Date(Date.now() - 86400000 + 120000).toISOString(),
+      type: 'TEXT', isRead: true, createdAt: new Date(Date.now() - 86400000 + 120000).toISOString(),
     },
   ],
 };
 
 // ============================================================
-// Helper: normalize conversation từ API về cùng format mock
+// Helpers
 // ============================================================
 const normalizeApiConversation = (conv, currentUserId) => {
   const participantList = Array.isArray(conv.participants)
@@ -188,7 +125,6 @@ const normalizeApiConversation = (conv, currentUserId) => {
     name: conv.type === 'GROUP'
       ? (conv.name || 'Nhóm chưa đặt tên')
       : (otherUser?.fullName || otherUser?.username || 'Unknown'),
-  
     avatar: conv.type === 'GROUP'
       ? (conv.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(conv.name || 'Group')}&background=00b894&color=fff`)
       : (otherUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(otherUser?.fullName || 'U')}&background=0084ff&color=fff`),
@@ -202,93 +138,56 @@ const normalizeApiConversation = (conv, currentUserId) => {
   };
 };
 
-// Helper: normalize message từ API
-const normalizeApiMessage = (m, conversationId) => ({
-  id: m._id || m.id,
-  _id: m._id || m.id,
-  conversationId: m.conversation || m.conversationId || conversationId,
-  content: m.content,
-  senderId: m.sender?._id || m.sender?.id || m.senderId,
-  sender: m.sender,
-  type: m.type || 'TEXT',
-  imageUrl: m.imageUrl,
-  attachments: m.attachments,
-  isRead: m.isRead,
-  createdAt: m.createdAt,
-});
+  const normalizeApiMessage = (m, conversationId) => ({
+    id: m._id || m.id,
+    _id: m._id || m.id,
+    conversationId: m.conversation || m.conversationId || conversationId,
+    content: m.content,
+    senderId: String(m.senderId || m.sender?.id || m.sender?._id || ''),
+    sender: m.sender,
+    type: m.type || 'TEXT',
+    imageUrl: m.imageUrl,
+    attachments: m.attachments,
+    isRead: m.isRead,
+    createdAt: m.createdAt,
+  });
 
 // ============================================================
-// CONTEXT
+// CONTEXT PROVIDER
 // ============================================================
 export const ChatProvider = ({ children }) => {
-  const [conversations, setConversations] = useState(MOCK_CONVERSATIONS);
-  const [selectedChat, setSelectedChat] = useState(MOCK_CONVERSATIONS[0]);
-  const [messages, setMessages] = useState(MOCK_MESSAGES['mock-conv-1']);
+  const [conversations, setConversations] = useState([]);
+  const [selectedChat, setSelectedChat] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null);
+  // Thay thế phần useState khởi tạo currentUser
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (!userStr) return null;
+      const user = JSON.parse(userStr);
+      const id = user.id || user._id;
+      return { ...user, id: String(id), _id: String(id) }; // ← String() cả hai
+    } catch {
+      return null;
+    }
+  });
   const [onlineUsers, setOnlineUsers] = useState(new Set());
   const [typingUsers, setTypingUsers] = useState(new Map());
 
-  const selectedChatRef = useRef(MOCK_CONVERSATIONS[0]);
+  const selectedChatRef = useRef(null);
   const currentUserRef = useRef(null);
 
   useEffect(() => { selectedChatRef.current = selectedChat; }, [selectedChat]);
   useEffect(() => { currentUserRef.current = currentUser; }, [currentUser]);
 
-  // ============ INIT ============
-  useEffect(() => {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      try {
-        const user = JSON.parse(userStr);
-        const normalized = { ...user, id: user.id || user._id };
-        setCurrentUser(normalized);
-        currentUserRef.current = normalized;
-        // Fetch API data và merge với mock
-        fetchConversations(normalized.id);
-        initializeSocket(normalized.id);
-      } catch (e) {
-        console.error('Parse user error:', e);
-      }
-    }
-    return () => socketService.disconnect();
-  }, []);
-
-  // ============ CONVERSATIONS ============
-  const fetchConversations = useCallback(async (userId) => {
-    
-    try {
-       const res = await api.get('/chat/conversations');
-    // api.js unwrap 1 lần → res = { success, data: [...] } hoặc res = [...]
-    const raw = res?.data || (Array.isArray(res) ? res : []);
-    
-    const currentId = userId || currentUserRef.current?.id;
-    const apiConvs = raw.map(conv => normalizeApiConversation(conv, currentId));
-
-      // Merge: API data đứng trước, mock data đứng sau (bổ sung)
-      setConversations(prev => {
-        const mockOnly = prev.filter(c => c.isMock);
-        // Dedupe: nếu API đã có conv trùng tên với mock thì giữ API
-        const merged = [...apiConvs, ...mockOnly];
-        return merged;
-      });
-
-      // Nếu đang chọn mock-conv và API có data → chuyển sang conv đầu API
-      if (apiConvs.length > 0 && selectedChatRef.current?.isMock) {
-        selectChat(apiConvs[0]);
-      }
-    } catch (err) {
-      console.error('fetchConversations error:', err);
-      // Giữ nguyên mock data khi API lỗi
-    }
-  }, []);
-
-  // ============ MESSAGES ============
+  // ============ FETCH MESSAGES ============
+  // Khai báo trước vì selectChat phụ thuộc vào nó
   const fetchMessages = useCallback(async (conversationId) => {
     if (!conversationId) return;
 
-    // Nếu là mock conversation → dùng mock messages ngay, không gọi API
     if (String(conversationId).startsWith('mock-')) {
       setMessages(MOCK_MESSAGES[conversationId] || []);
       return;
@@ -297,8 +196,7 @@ export const ChatProvider = ({ children }) => {
     setLoading(true);
     try {
       const res = await api.get(`/chat/conversations/${conversationId}/messages?page=1&limit=20`);
-// api.js unwrap 1 lần → res = { success, data: { messages: [...] } }
-const msgs = res?.data?.messages || res?.messages || res?.data || [];
+      const msgs = res?.data?.messages || res?.messages || res?.data || [];
       const normalized = Array.isArray(msgs)
         ? msgs.map(m => normalizeApiMessage(m, conversationId)).reverse()
         : [];
@@ -312,6 +210,7 @@ const msgs = res?.data?.messages || res?.messages || res?.data || [];
   }, []);
 
   // ============ SELECT CHAT ============
+  // Khai báo sau fetchMessages vì phụ thuộc vào nó
   const selectChat = useCallback((chat) => {
     setSelectedChat(chat);
     selectedChatRef.current = chat;
@@ -323,63 +222,165 @@ const msgs = res?.data?.messages || res?.messages || res?.data || [];
     }
   }, [fetchMessages]);
 
-  // Create conversation with a user
-  const createConversation = useCallback(async (participantId, participantUser = null) => {
+  // ============ FETCH CONVERSATIONS ============
+  // Khai báo sau selectChat vì phụ thuộc vào nó
+  // ChatContext.js - chỉ sửa fetchConversations
+const fetchConversations = useCallback(async (userId) => {
+  setIsInitializing(true); // ← bắt đầu loading
   try {
-    // Dùng api.js để tự động thêm Authorization header
-    const res = await api.post('/chat/conversations', { participantId: parseInt(participantId) });
+    const res = await api.get('/chat/conversations');
+    const raw = res?.data || (Array.isArray(res) ? res : []);
 
-    // api.js unwrap 1 lần → res = { success, data: conv }
-    const convData = res?.data || res;
+    const currentId = userId || currentUserRef.current?.id;
+    const apiConvs = Array.isArray(raw)
+      ? raw.map(conv => normalizeApiConversation(conv, currentId))
+      : [];
 
-    if (!convData?.id) throw new Error('Không lấy được conversation id');
-
-    const currentId = currentUserRef.current?.id;
-    const newConv = normalizeApiConversation(convData, currentId);
-
-    if ((!newConv.name || newConv.name === 'Unknown') && participantUser) {
-      newConv.name = participantUser.fullName || participantUser.username || `User ${participantId}`;
+    if (apiConvs.length > 0) {
+      setConversations(apiConvs);
+      selectChat(apiConvs[0]);
+    } else {
+      setConversations([]);
+      setSelectedChat(null);
     }
-    if ((!newConv.avatar || newConv.avatar.includes('/api/?name=U')) && participantUser) {
-      newConv.avatar = participantUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(participantUser.fullName || participantUser.username || 'U')}&background=0084ff&color=fff`;
-    }
-
-    setConversations(prev => {
-      const exists = prev.some(c => String(c.id) === String(newConv.id));
-      return exists ? prev : [newConv, ...prev.filter(c => !c.isMock)];
-    });
-
-    selectChat(newConv);
-    return newConv;
-
   } catch (err) {
-    console.error('createConversation error:', err?.response?.data || err.message);
-    console.error('createConversation error:', err?.response?.data || err.message);
-    
-    // Fallback mock conversation (giữ nguyên logic cũ)
-    const mockConvId = `mock-conv-${participantId}-${Date.now()}`;
-    const mockConv = {
-      id: mockConvId,
-      userId: participantId,
-      name: participantUser?.fullName || participantUser?.username || `User ${participantId}`,
-      avatar: participantUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(participantUser?.fullName || participantUser?.username || `User ${participantId}`)}&background=0084ff&color=fff`,
-      lastMessage: '',
-      time: 'Vừa xong',
-      online: false,
-      unread: 0,
-      type: 'PRIVATE',
-      group: false,
-      isMock: true,
-    };
-    MOCK_MESSAGES[mockConvId] = [];
-    setConversations(prev => [mockConv, ...prev]);
-    selectChat(mockConv);
-    return mockConv;
+    console.error('fetchConversations error:', err);
+    setConversations(MOCK_CONVERSATIONS);
+    setSelectedChat(MOCK_CONVERSATIONS[0]);
+    setMessages(MOCK_MESSAGES['mock-conv-1']);
+  } finally {
+    setIsInitializing(false); // ← xong thì tắt loading
   }
 }, [selectChat]);
 
+  // ============ INIT ============
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        const normalized = {
+          ...user,
+          id: String(user.id || user._id),
+          _id: String(user.id || user._id),
+        };
+        // KHÔNG setCurrentUser ở đây nữa — useState lazy init đã đọc đúng rồi
+        currentUserRef.current = normalized; // chỉ update ref để các callback dùng
+        fetchConversations(normalized.id).finally(() => setIsInitializing(false));
+        initializeSocket(normalized.id);
+      } catch (e) {
+        console.error('Parse user error:', e);
+        setIsInitializing(false);
+        setConversations(MOCK_CONVERSATIONS);
+        setSelectedChat(MOCK_CONVERSATIONS[0]);
+        setMessages(MOCK_MESSAGES['mock-conv-1']);
+      }
+    } else {
+      // Không có token → demo mode với mock data
+      setIsInitializing(false);
+      setConversations(MOCK_CONVERSATIONS);
+      setSelectedChat(MOCK_CONVERSATIONS[0]);
+      setMessages(MOCK_MESSAGES['mock-conv-1']);
+    }
+    return () => socketService.disconnect();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // ☝️ bỏ qua warning vì fetchConversations/initializeSocket ổn định sau mount
+
+  // ============ CREATE CONVERSATION ============
+  const createConversation = useCallback(async (participantId, participantUser = null) => {
+    try {
+      const res = await api.post('/chat/conversations', { participantId: parseInt(participantId) });
+      const convData = res?.data || res;
+
+      if (!convData?.id) throw new Error('Không lấy được conversation id');
+
+      const currentId = currentUserRef.current?.id;
+      const newConv = normalizeApiConversation(convData, currentId);
+
+      if ((!newConv.name || newConv.name === 'Unknown') && participantUser) {
+        newConv.name = participantUser.fullName || participantUser.username || `User ${participantId}`;
+      }
+      if ((!newConv.avatar || newConv.avatar.includes('/api/?name=U')) && participantUser) {
+        newConv.avatar = participantUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(participantUser.fullName || participantUser.username || 'U')}&background=0084ff&color=fff`;
+      }
+
+      setConversations(prev => {
+        const exists = prev.some(c => String(c.id) === String(newConv.id));
+        return exists ? prev : [newConv, ...prev.filter(c => !c.isMock)];
+      });
+
+      selectChat(newConv);
+      return newConv;
+    } catch (err) {
+      console.error('createConversation error:', err?.response?.data || err.message);
+
+      const mockConvId = `mock-conv-${participantId}-${Date.now()}`;
+      const mockConv = {
+        id: mockConvId,
+        userId: participantId,
+        name: participantUser?.fullName || participantUser?.username || `User ${participantId}`,
+        avatar: participantUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(participantUser?.fullName || participantUser?.username || `User ${participantId}`)}&background=0084ff&color=fff`,
+        lastMessage: '', time: 'Vừa xong', online: false, unread: 0,
+        type: 'PRIVATE', group: false, isMock: true,
+      };
+      MOCK_MESSAGES[mockConvId] = [];
+      setConversations(prev => [mockConv, ...prev]);
+      selectChat(mockConv);
+      return mockConv;
+    }
+  }, [selectChat]);
+
+  // ============ CREATE GROUP ============
+  const createGroupConversation = useCallback(async ({ name, memberIds }) => {
+    try {
+      const payload = {
+        name: name?.trim(),
+        memberIds: (memberIds || []).filter(Boolean),
+        type: 'GROUP',
+      };
+
+      if (!payload.name || payload.memberIds.length === 0) {
+        throw new Error('Thiếu tên nhóm hoặc thành viên');
+      }
+
+      const created = await api.post('/chat/conversations/group', payload);
+      const convData = created?.data || created;
+
+      if (!convData?.id && !convData?._id) throw new Error('Không nhận được dữ liệu nhóm');
+
+      const currentId = currentUserRef.current?.id;
+      const newConv = normalizeApiConversation(convData, currentId);
+      newConv.name = newConv.name || payload.name;
+      newConv.type = 'GROUP';
+      newConv.group = true;
+
+      setConversations(prev => {
+        const exists = prev.some(c => String(c.id) === String(newConv.id));
+        return exists ? prev : [newConv, ...prev.filter(c => !c.isMock)];
+      });
+
+      selectChat(newConv);
+      return newConv;
+    } catch (err) {
+      console.error('createGroupConversation error:', err?.response?.data || err.message);
+
+      const mockConvId = `mock-group-${Date.now()}`;
+      const mockConv = {
+        id: mockConvId, userId: null,
+        name: name?.trim() || 'Nhóm mới',
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name?.trim() || 'Group')}&background=00b894&color=fff`,
+        lastMessage: '', time: 'Vừa xong', online: false, unread: 0,
+        type: 'GROUP', group: true, isMock: true,
+      };
+      MOCK_MESSAGES[mockConvId] = [];
+      setConversations(prev => [mockConv, ...prev]);
+      selectChat(mockConv);
+      return mockConv;
+    }
+  }, [selectChat]);
+
   // ============ SEND MESSAGE ============
-  const sendMessage = useCallback(async (content, contentType = 'TEXT') => {
+  const sendMessage = useCallback(async (content, contentType = 'TEXT', attachments = []) => {
     const chat = selectedChatRef.current;
     const user = currentUserRef.current;
     if (!chat?.id || !content?.trim()) return;
@@ -392,6 +393,7 @@ const msgs = res?.data?.messages || res?.messages || res?.data || [];
       senderId: user?.id || 'me',
       sender: user ? { _id: user.id, fullName: user.fullName, avatar: user.avatar } : null,
       type: contentType.toUpperCase(),
+      attachments,
       isRead: false,
       createdAt: new Date().toISOString(),
       status: 'sending',
@@ -399,26 +401,20 @@ const msgs = res?.data?.messages || res?.messages || res?.data || [];
 
     setMessages(prev => [...prev, tempMsg]);
 
-    // Mock conversation → lưu local, không gọi API
     if (String(chat.id).startsWith('mock-')) {
-      setMessages(prev =>
-        prev.map(m => m.id === tempId ? { ...m, status: 'sent' } : m)
-      );
+      setMessages(prev => prev.map(m => m.id === tempId ? { ...m, status: 'sent' } : m));
       setConversations(prev =>
-        prev.map(c => c.id === chat.id
-          ? { ...c, lastMessage: content, time: 'Vừa xong' }
-          : c
-        )
+        prev.map(c => c.id === chat.id ? { ...c, lastMessage: content, time: 'Vừa xong' } : c)
       );
       return;
     }
 
-    // Real conversation → gọi API
     try {
       const res = await api.post('/chat/messages', {
         conversationId: chat.id,
         content,
         type: contentType.toUpperCase(),
+        attachments: attachments.length ? attachments : undefined,
       });
       const saved = res?.data || res;
       const realId = saved?._id || saved?.id;
@@ -432,9 +428,7 @@ const msgs = res?.data?.messages || res?.messages || res?.data || [];
       }
     } catch (err) {
       console.error('sendMessage error:', err?.response?.data);
-      setMessages(prev =>
-        prev.map(m => m.id === tempId ? { ...m, status: 'failed' } : m)
-      );
+      setMessages(prev => prev.map(m => m.id === tempId ? { ...m, status: 'failed' } : m));
     }
   }, []);
 
@@ -482,10 +476,9 @@ const msgs = res?.data?.messages || res?.messages || res?.data || [];
   const uploadFile = async (file) => {
     const formData = new FormData();
     formData.append('image', file);
-    const res = await api.post('/upload', formData, {
+    return await api.post('/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
-    return res;
   };
 
   // ============ TYPING ============
@@ -507,11 +500,12 @@ const msgs = res?.data?.messages || res?.messages || res?.data || [];
     loading,
     error,
     currentUser,
-    conversations,
     onlineUsers,
     typingUsers,
+    isInitializing,
     fetchConversations,
     createConversation,
+    createGroupConversation,
     selectChat,
     setSelectedChat: selectChat,
     fetchMessages,

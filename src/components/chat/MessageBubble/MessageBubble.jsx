@@ -10,9 +10,16 @@ const MessageBubble = ({ message, currentUserId }) => {
     );
   }
 
-  // Hỗ trợ cả format cũ (type: 'sent'/'received') lẫn format server (senderId)
-  const isSent = message.type === 'sent' || 
-                 String(message.senderId) === String(currentUserId);
+
+// Thêm fallback currentUserId rõ ràng hơn
+  const isSent = 
+    message.type === 'sent' || 
+    message.senderId === 'me' ||
+    Boolean(
+      currentUserId && 
+      message.senderId && 
+      String(message.senderId) === String(currentUserId)
+    );
 
   const hasAttachments = message.attachments && message.attachments.length > 0;
   const isImageContent = message.contentType === 'image' || 

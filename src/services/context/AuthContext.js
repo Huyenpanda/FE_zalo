@@ -51,10 +51,17 @@ export const AuthProvider = ({ children }) => {
 
       if (!newToken || !userData) throw new Error('Dữ liệu đăng nhập không hợp lệ');
 
+      const normalizedUser = {
+        ...userData,
+        id: String(userData.id || userData._id || ''),
+        _id: String(userData.id || userData._id || ''),
+      };
+
       localStorage.setItem('token', newToken);
-      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('user', JSON.stringify(normalizedUser));
       setToken(newToken);
-      setUser(userData);
+      setUser(normalizedUser);
+
       api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
       socketService.connect(newToken);
       if (userData?.id) socketService.joinUser(userData.id);

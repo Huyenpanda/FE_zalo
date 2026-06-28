@@ -9,6 +9,7 @@ import './styles/global.css';
 import { ChatProvider } from './services/context/ChatContext';
 import { AuthProvider } from './services/context/AuthContext';
 import ProfilePage from './pages/Profilepage';
+import PostDetail from './pages/PostDetail';
 import Createpostpage from './pages/Createpostpage';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/profile/:userId" element={<ProfilePage />} />
               <Route path="/post/create" element={<Createpostpage />} />
+              <Route path="/post/:postId" element={<PostDetail />} />
             </Routes>
           </Router>
         </div>
