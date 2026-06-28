@@ -87,8 +87,15 @@ export default function PostDetail() {
       setError('');
       try {
         const postRes = await api.get(`/posts/${postId}`);
-const data = postRes?.data ?? postRes;
-console.log('RAW post data:', JSON.stringify(data)); // ← paste kết quả này ra
+        const data = postRes?.data ?? postRes;
+        console.log('RAW post data keys:', Object.keys(data));
+        console.log('liked fields:', {
+        liked: data.liked,
+        isLiked: data.isLiked,
+        likeStatus: data.likeStatus,
+        likedByCurrentUser: data.likedByCurrentUser,
+        likedByMe: data.likedByMe,
+        });
         const normalizedPost = normalizePost(data, authUser);
         setPost({ ...normalizedPost, time: formatTime(normalizedPost.time) });
       } catch (err) {

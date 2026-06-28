@@ -45,7 +45,7 @@ const PAGE_HEADERS = {
 // ─── Main Component ────────────────────────────────────────────────────────────
 const Contacts = ({ onBack, onViewChange }) => {
   const { currentUser, selectChat, fetchConversations, createConversation, conversations } = useChat();
-
+  const groupConversations = conversations.filter(conv => conv.type === 'GROUP' || conv.group === true);
   const [activeMenu, setActiveMenu] = useState('friends');
   const [groupSearchQuery, setGroupSearchQuery] = useState('');
   const [groupActivity, setGroupActivity] = useState('all');
@@ -169,12 +169,9 @@ const Contacts = ({ onBack, onViewChange }) => {
   };
 
   // ── Groups (dữ liệu mock) ──
-  const filteredGroups = groupList.filter(g => {
-    const matchSearch = g.name.toLowerCase().includes(groupSearchQuery.toLowerCase());
-    const matchActivity = groupActivity === 'all' || g.status === groupActivity;
-    const matchType = groupType === 'all' || g.type === groupType;
-    return matchSearch && matchActivity && matchType;
-  });
+  const filteredGroups = groupConversations.filter(g =>
+    g.name.toLowerCase().includes(groupSearchQuery.toLowerCase())
+  );
 
   // ─── Render ────────────────────────────────────────────────────────────────
   return (
@@ -340,7 +337,7 @@ const GroupsList = ({ groups, searchQuery, onSearch, activity, onActivityChange,
           </div>
           <div className={styles.groupInfo}>
             <div className={styles.groupName}>{group.name}</div>
-            <div className={styles.groupMeta}>{group.members} thành viên</div>
+            <div className={styles.groupMeta}>Nhóm chat</div>
           </div>
         </div>
       )) : (
