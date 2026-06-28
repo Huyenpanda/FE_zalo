@@ -87,7 +87,8 @@ export default function PostDetail() {
       setError('');
       try {
         const postRes = await api.get(`/posts/${postId}`);
-        const data = postRes?.data ?? postRes;
+const data = postRes?.data ?? postRes;
+console.log('RAW post data:', JSON.stringify(data)); // ← paste kết quả này ra
         const normalizedPost = normalizePost(data, authUser);
         setPost({ ...normalizedPost, time: formatTime(normalizedPost.time) });
       } catch (err) {
@@ -117,26 +118,33 @@ export default function PostDetail() {
     loadComments();
   }, [postId, authUser]);
 
-  const handleLike = async (currentPost) => {
-    if (!currentPost?.id) return;
-    const nextLiked = !currentPost.liked;
+  const handleLike = async (updatedPost) => {
+    if (!updatedPost?.id) return;
+    const nextLiked = updatedPost.liked; // PostItem đã flip rồi
+
     setPost((prev) => prev ? {
-      ...prev,
-      liked: nextLiked,
-      likes: Math.max(0, Number(prev.likes || 0) + (nextLiked ? 1 : -1)),
+        ...prev,
+        liked: nextLiked,
+        likes: updatedPost.likes,
     } : prev);
 
     try {
-      if (nextLiked) {
-        await api.post(`/posts/${currentPost.id}/like`);
-      } else {
-        await api.delete(`/posts/${currentPost.id}/like`);
-      }
+        if (nextLiked) {
+        await api.post(`/posts/${updatedPost.id}/like`);
+        } else {
+        await api.delete(`/posts/${updatedPost.id}/like`);
+        }
     } catch (err) {
-      console.error('Post detail like error:', err);
-      setPost((prev) => prev ? { ...prev, liked: currentPost.liked, likes: Number(currentPost.likes || 0) } : prev);
+        console.error('Post detail like error:', err);
+        setPost((prev) => prev ? {
+        ...prev,
+        liked: !nextLiked,
+        likes: nextLiked
+            ? Math.max(0, updatedPost.likes - 1)
+            : updatedPost.likes + 1,
+        } : prev);
     }
-  };
+    };
 
   const handleSendComment = async () => {
     const content = commentDraft.trim();

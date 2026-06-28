@@ -79,11 +79,14 @@ const PostItem = ({
     e.stopPropagation();
     const nextLiked = !liked;
     if (nextLiked) {
-      setBursting(true);
-      window.setTimeout(() => setBursting(false), 400);
+        setBursting(true);
+        window.setTimeout(() => setBursting(false), 400);
     }
-    onLike?.({ ...post, liked: nextLiked });
-  };
+    const nextLikeCount = nextLiked
+        ? likeCount + 1
+        : Math.max(0, likeCount - 1);
+    onLike?.({ ...post, liked: nextLiked, likes: nextLikeCount });
+    };
 
   const handleCommentClick = (e) => {
     e.stopPropagation();

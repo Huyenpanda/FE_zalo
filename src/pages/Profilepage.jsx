@@ -20,8 +20,25 @@ function CreatePostBox({ user, onCreated }) {
 }
 
 // ── ProfileInfo ──────────────────────────────────────────────
-function ProfileInfo({ user, isMe, onMessage, coverRef }) {
-  const navigate = useNavigate();
+function ProfileInfo({ user, isMe, onMessage, onEdit, onAvatarChange, coverRef }) {
+  const avatarInputRef = React.useRef(null);
+
+  const handleAvatarClick = () => {
+    if (isMe) avatarInputRef.current?.click();
+  };
+
+  const handleAvatarFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert('Vui lòng chọn file ảnh');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => onAvatarChange?.(ev.target.result, file);
+    reader.readAsDataURL(file);
+  };
+
   return (
     <div className={styles.profileInfo}>
       <div className={styles.coverWrap} ref={coverRef}>
@@ -29,12 +46,39 @@ function ProfileInfo({ user, isMe, onMessage, coverRef }) {
           alt="cover" className={styles.coverImg} />
       </div>
       <div className={styles.avatarSection}>
-        <img src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'U')}&background=0084ff&color=fff`}
-          alt={user.name} className={styles.profileAvatar} />
+        <div style={{ position: 'relative', display: 'inline-block' }}>
+          <img
+            src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'U')}&background=0084ff&color=fff`}
+            alt={user.name}
+            className={styles.profileAvatar}
+            onClick={handleAvatarClick}
+            style={{ cursor: isMe ? 'pointer' : 'default' }}
+          />
+          {isMe && (
+            <>
+              <div onClick={handleAvatarClick} style={{
+                position: 'absolute', bottom: 4, right: 4,
+                background: '#0084ff', borderRadius: '50%',
+                width: 28, height: 28, display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+              }}>
+                <span style={{ color: '#fff', fontSize: 14 }}>📷</span>
+              </div>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleAvatarFile}
+              />
+            </>
+          )}
+        </div>
         <h2 className={styles.profileName}>{user.name}</h2>
         {user.bio && <p className={styles.profileBio}>{user.bio}</p>}
         {isMe && (
-          <button className={styles.editProfileBtn} onClick={() => navigate('/profile/settings')}>
+          <button className={styles.editProfileBtn} onClick={onEdit}>
             ✏️ Cập nhật thông tin
           </button>
         )}
@@ -174,6 +218,10 @@ export default function ProfilePage() {
   const [commentsByPost, setCommentsByPost] = useState({});
   const coverRef = useRef(null);
 
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({ fullName: '', email: '' });
+  const [editSaving, setEditSaving] = useState(false);
+
   const isMe = !userId || String(userId) === String(authUser?.id);
 
   // Dùng IntersectionObserver thay vì window.scrollY
@@ -205,13 +253,17 @@ export default function ProfilePage() {
       const targetId = userId || authUser?.id;
 
       // Load user info
-      let userData;
-      try {
-        const res = await api.get(targetId ? `/users/${targetId}` : '/auth/me');
+      // Load user info
+    let userData;
+    try {
+      if (isMe) {
+        const res = await api.get('/auth/me');
         userData = res.data?.data || res.data;
-      } catch {
-        userData = null;
       }
+      // Nếu xem profile người khác thì dùng mock/data có sẵn
+    } catch {
+      userData = null;
+    }
 
       // Merge với authUser hoặc mock nếu profile người khác không có data
       let normalized;
@@ -270,7 +322,8 @@ export default function ProfilePage() {
       // Load posts
       try {
         const postsRes = await api.get(`/posts/users/${normalized.id}/posts?page=1&limit=20`);
-        const rawPosts = extractPostsList(postsRes.data ?? postsRes ?? []);
+const rawPosts = extractPostsList(postsRes.data ?? postsRes ?? []);
+console.log('RAW post[0]:', JSON.stringify(rawPosts[0])); // ← và cái này
         const mappedPosts = rawPosts
           .map((p) => normalizePost(p, normalized))
           .map((post) => ({ ...post, time: formatTime(post.time) }));
@@ -295,31 +348,28 @@ export default function ProfilePage() {
     return `${Math.floor(diff / 86400000)} ngày trước`;
   };
 
-  const handleLike = async (post) => {
-    if (String(post.id).startsWith('mock-')) return;
+  const handleLike = async (updatedPost) => {
+    if (String(updatedPost.id).startsWith('mock-')) return;
 
-    const nextLiked = !post.liked;
-    setPosts(prev => prev.map(item => item.id === post.id
-      ? {
-          ...item,
-          liked: nextLiked,
-          likes: Math.max(0, Number(item.likes || 0) + (nextLiked ? 1 : -1)),
-        }
+    // PostItem đã flip liked rồi, dùng thẳng updatedPost.liked
+    const nextLiked = updatedPost.liked;
+
+    setPosts(prev => prev.map(item => item.id === updatedPost.id
+      ? { ...item, liked: nextLiked, likes: updatedPost.likes }
       : item));
 
     try {
       if (nextLiked) {
-        await api.post(`/posts/${post.id}/like`);
+        await api.post(`/posts/${updatedPost.id}/like`);
       } else {
-        await api.delete(`/posts/${post.id}/like`);
+        await api.delete(`/posts/${updatedPost.id}/like`);
       }
     } catch (err) {
-      setPosts(prev => prev.map(item => item.id === post.id
-        ? {
-            ...item,
-            liked: post.liked,
-            likes: Math.max(0, Number(post.likes || 0)),
-          }
+      // Revert nếu API lỗi
+      setPosts(prev => prev.map(item => item.id === updatedPost.id
+        ? { ...item, liked: !nextLiked, likes: nextLiked
+            ? Math.max(0, updatedPost.likes - 1)
+            : updatedPost.likes + 1 }
         : item));
       console.error('Like error:', err);
     }
@@ -435,7 +485,35 @@ export default function ProfilePage() {
       ));
     }
   };
+const openEditModal = () => {
+  setEditForm({
+  fullName: profileUser?.name || '',
+  email: profileUser?.email || '',
+});
+  setShowEditModal(true);
+};
 
+const handleSaveProfile = async () => {
+  setEditSaving(true);
+  try {
+    const updatedUser = {
+    ...profileUser,
+    name: editForm.fullName.trim() || profileUser.name,
+  };
+    // Cập nhật localStorage để sidebar đồng bộ
+    const stored = JSON.parse(localStorage.getItem('user') || '{}');
+    localStorage.setItem('user', JSON.stringify({
+      ...stored,
+      fullName: updatedUser.name,
+    }));
+    setProfileUser(updatedUser);
+    setShowEditModal(false);
+  } catch (err) {
+    alert('Lưu thất bại: ' + err.message);
+  } finally {
+    setEditSaving(false);
+  }
+};
   const handleMessage = () => {
     if (!profileUser?.id) return;
     navigate(`/messages/${profileUser.id}`);
@@ -461,14 +539,14 @@ export default function ProfilePage() {
       </div>
 
       {/* Profile Info */}
-      {profileUser && <ProfileInfo user={profileUser} isMe={isMe} onMessage={handleMessage} coverRef={coverRef} />}
+      {profileUser && <ProfileInfo user={profileUser} isMe={isMe} onMessage={handleMessage} onEdit={openEditModal} coverRef={coverRef} />}
 
       {/* Info rows (chỉ hiện cho chính mình) */}
       {isMe && profileUser && (
         <div className={styles.infoSection}>
           {profileUser.username && <InfoRow label="Tên đăng nhập" value={`@${profileUser.username}`} editable={false} />}
           {profileUser.email && <InfoRow label="Email" value={profileUser.email} editable={true} onPress={() => navigate('/profile/settings')} />}
-          {profileUser.bio && <InfoRow label="Giới thiệu" value={profileUser.bio} editable={true} onPress={() => navigate('/profile/settings')} />}
+          
         </div>
       )}
 
@@ -576,7 +654,47 @@ export default function ProfilePage() {
         <div className={styles.infoSection}>
           <InfoRow label="Tên hiển thị" value={profileUser.name} editable={isMe} onPress={() => navigate('/profile/settings')} />
           {profileUser.username && <InfoRow label="Username" value={`@${profileUser.username}`} editable={false} />}
-          {profileUser.bio && <InfoRow label="Giới thiệu" value={profileUser.bio} editable={isMe} onPress={() => navigate('/profile/settings')} />}
+          
+        </div>
+      )}
+      {showEditModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: 16, padding: 24,
+            width: '90%', maxWidth: 420, display: 'flex', flexDirection: 'column', gap: 16,
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: 18 }}>Cập nhật thông tin</h3>
+              <button onClick={() => setShowEditModal(false)}
+                style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }}>✕</button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontSize: 13, color: '#666' }}>Họ tên</label>
+              <input
+                value={editForm.fullName}
+                onChange={e => setEditForm(prev => ({ ...prev, fullName: e.target.value }))}
+                style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 15 }}
+                placeholder="Họ tên hiển thị"
+              />
+            </div>
+
+            
+
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowEditModal(false)}
+                style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid #ddd', background: '#fff', cursor: 'pointer', fontSize: 14 }}>
+                Hủy
+              </button>
+              <button onClick={handleSaveProfile} disabled={editSaving}
+                style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#0084ff', color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
+                {editSaving ? 'Đang lưu...' : 'Lưu'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

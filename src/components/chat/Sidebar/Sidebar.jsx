@@ -6,11 +6,13 @@ import api from '../../../services/api';
 import CloudPanel from '../Modals/CloudPanel';
 import ToolsPanel from '../Modals/ToolsPanel';
 import { useChat } from '../../../services/context/ChatContext';
+import { useAuth } from '../../../services/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const Sidebar = ({ conversations = [], selectedChat, onSelectChat, onViewChange, currentView }) => {
   const navigate = useNavigate();
-  const { currentUser, createGroupConversation, isInitializing } = useChat();
+  const { createGroupConversation, isInitializing } = useChat();
+  const { user: currentUser } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [activeNav, setActiveNav] = useState(currentView || 'messages');

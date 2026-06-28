@@ -128,14 +128,31 @@ const normalizeApiConversation = (conv, currentUserId) => {
     avatar: conv.type === 'GROUP'
       ? (conv.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(conv.name || 'Group')}&background=00b894&color=fff`)
       : (otherUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(otherUser?.fullName || 'U')}&background=0084ff&color=fff`),
-    lastMessage: conv.lastMessage?.content || '',
-    time: conv.lastMessage?.createdAt,
+    lastMessage: typeof conv.lastMessage === 'string'
+      ? conv.lastMessage
+      : conv.lastMessage?.content || conv.lastMessagePreview || '',
+    time: formatConvTime(conv.lastMessageAt || conv.lastMessage?.createdAt),
     online: otherUser?.isOnline || false,
     unread: conv.unreadCount || 0,
     type: conv.type || 'PRIVATE',
     group: conv.type === 'GROUP',
     isMock: false,
   };
+};
+const formatConvTime = (isoString) => {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Vừa xong';
+  if (diffMins < 60) return `${diffMins} phút`;
+  if (diffHours < 24) return `${diffHours} giờ`;
+  if (diffDays < 7) return `${diffDays} ngày`;
+  return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
 };
 
   const normalizeApiMessage = (m, conversationId) => ({
