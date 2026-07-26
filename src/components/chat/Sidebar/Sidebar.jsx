@@ -43,19 +43,28 @@ const Sidebar = ({ conversations = [], selectedChat, onSelectChat, onViewChange,
   const handleContactsClick = () => {
     setActiveNav('contacts');
     if (navOnly) { navigate('/chat'); return; }
-    if (onViewChange) onViewChange('contacts');
+    if (onViewChange) { onViewChange('contacts'); return; }
+    navigate('/chat');
   };
 
   const handleMessagesClick = () => {
     setActiveNav('messages');
     if (navOnly) { navigate('/chat'); return; }
-    if (onViewChange) onViewChange('messages');
+    if (onViewChange) { onViewChange('messages'); return; }
+    navigate('/chat');
   };
 
   const handleDiaryClick = () => {
     setActiveNav('diary');
     if (navOnly) { navigate('/chat'); return; }
-    if (onViewChange) onViewChange('diary');
+    if (onViewChange) { onViewChange('diary'); return; }
+    navigate('/chat');
+  };
+
+  // Mobile: navigate + set activeNav
+  const handleMobileNav = (view) => {
+    setActiveNav(view);
+    if (onViewChange) onViewChange(view);
   };
 
   const isSidePanelView = currentView === 'contacts' || currentView === 'diary';
@@ -200,6 +209,22 @@ const Sidebar = ({ conversations = [], selectedChat, onSelectChat, onViewChange,
             <button className={styles.navItem} title="Công cụ" onClick={() => setShowTools(true)}><i className="fas fa-briefcase"></i></button>
             <button className={styles.navItem} title="Cài đặt" onClick={() => setShowSettings(true)}><i className="fas fa-cog"></i></button>
           </div>
+        </div>
+
+        {/* Mobile Bottom Nav */}
+        <div className={styles.mobileBottomNav}>
+          <button className={`${styles.mobileNavItem} ${activeNav === 'messages' ? styles.mobileNavActive : ''}`} onClick={() => handleMobileNav('messages')}>
+            <i className="fas fa-comment-dots"></i><span>Chat</span>
+          </button>
+          <button className={`${styles.mobileNavItem} ${activeNav === 'contacts' ? styles.mobileNavActive : ''}`} onClick={() => handleMobileNav('contacts')}>
+            <i className="fas fa-address-book"></i><span>Danh bạ</span>
+          </button>
+          <button className={`${styles.mobileNavItem} ${activeNav === 'diary' ? styles.mobileNavActive : ''}`} onClick={() => handleMobileNav('diary')}>
+            <i className="fas fa-book-open"></i><span>Nhật ký</span>
+          </button>
+          <button className={styles.mobileNavItem} onClick={() => setShowSettings(true)}>
+            <i className="fas fa-cog"></i><span>Cài đặt</span>
+          </button>
         </div>
 
         {!isSidePanelView && (

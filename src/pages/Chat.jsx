@@ -43,7 +43,7 @@ const Chat = () => {
 
   return (
     <div className={styles.chatContainer}>
-      {isMobile && showSidebar ? (
+      {isMobile && showSidebar && currentView === 'messages' ? (
         <Sidebar
           conversations={conversations}
           selectedChat={selectedChat}
