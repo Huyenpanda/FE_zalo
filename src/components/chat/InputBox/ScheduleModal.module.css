@@ -24,7 +24,7 @@
   align-items: center;
   padding: 20px;
   border-bottom: 1px solid #e5e5e5;
-  background: #f9f9f9;
+  background: var(--apple-canvas-parchment);
 }
 
 .scheduleHeader h3 {
@@ -85,8 +85,8 @@
 .select:focus,
 .textarea:focus {
   outline: none;
-  border-color: #0068ff;
-  box-shadow: 0 0 0 3px rgba(0, 104, 255, 0.1);
+  border-color: var(--apple-primary);
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.12);
 }
 
 .textarea {
@@ -116,7 +116,7 @@
 }
 
 .preview i {
-  color: #0068ff;
+  color: var(--apple-primary);
   width: 16px;
 }
 
@@ -152,12 +152,10 @@
 }
 
 .scheduleBtn {
-  background: #0068ff;
+  background: var(--apple-primary);
   color: #fff;
 }
 
 .scheduleBtn:hover {
-  background: #0052cc;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 104, 255, 0.3);
+  background: var(--apple-primary-focus);
 }

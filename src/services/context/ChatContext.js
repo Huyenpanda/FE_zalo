@@ -449,7 +449,7 @@ const fetchConversations = useCallback(async (userId) => {
     }
   }, []);
 
-  // ============ SOCKET ============
+  // ============ SOCKET & WEBRTC CALL ============
   const handleNewMessage = useCallback((message) => {
     const incomingConvId = message.conversationId || message.conversation_id;
     if (String(incomingConvId) !== String(selectedChatRef.current?.id)) return;
@@ -472,22 +472,138 @@ const fetchConversations = useCallback(async (userId) => {
     });
   }, []);
 
+  const [callState, setCallState] = useState({
+    active: false, type: null, status: '',
+    remoteStream: null, remoteUser: null,
+  });
+
+  const endCall = useCallback(() => {
+    if (window.__callEnding) return;
+    window.__callEnding = true;
+    const remoteId = window.__callRemoteUserId;
+    import('../../services/webrtc').then(mod => mod.default.endCall());
+    if (remoteId) {
+      socketService.emitToPython('end_call', {
+        toUserId: remoteId,
+        conversationId: selectedChatRef.current?.id,
+        callerId: currentUser?.id,
+        duration: 0,
+        status: 'ENDED',
+      });
+    }
+    setCallState({ active: false, type: null, status: '', remoteStream: null, remoteUser: null });
+    setTimeout(() => { window.__callEnding = false; }, 2000);
+  }, []);
+
+  const handleIncomingCall = useCallback(async (data) => {
+    console.log('📞 incoming_call:', JSON.stringify(data));
+    const uid = data.fromUserId;
+    if (uid) window.__callRemoteUserId = uid;
+    setCallState({ active: true, type: data.isVideo ? 'video' : 'voice', status: 'ringing', remoteStream: null, remoteUser: { id: uid } });
+    window.__pendingCallOffer = { offer: data.offer, fromUserId: uid };
+  }, []);
+
+  const handleCallAnswered = useCallback(async (data) => {
+    console.log('📞 call_answered:', { hasAnswer: !!data.answer });
+    setCallState(prev => ({ ...prev, status: 'connected' }));
+    try { const w = (await import('../../services/webrtc')).default; if (data.answer) w.handleAnswer(data.answer); } catch (e) {}
+  }, []);
+
+  const handleCallEnded = useCallback(() => {
+    endCall();
+  }, [endCall]);
+
+  const handleIceCandidate = useCallback(async (data) => {
+    try { const w = (await import('../../services/webrtc')).default; w.addIceCandidate(data.candidate); } catch (e) {}
+  }, []);
+
+  const startCall = useCallback(async (targetUserId, isVideo = true) => {
+    console.log('📞 startCall to', targetUserId, 'pyConn:', socketService.socketPython?.connected);
+    window.__callRemoteUserId = targetUserId;
+    try {
+      const webrtc = (await import('../../services/webrtc')).default;
+      webrtc.pc = null;
+      await webrtc.startLocalStream(isVideo);
+      webrtc.onCallEnded = () => endCall();
+      webrtc.onRemoteStream = (stream) => {
+        console.log('📹 Remote stream received');
+        const tryAttach = (retry = 5) => {
+          const rv = window.__remoteVideo;
+          if (rv) { rv.srcObject = stream; rv.style.display = 'block'; rv.play().catch(e => {}); console.log('✅ Remote video attached'); }
+          else if (retry > 0) setTimeout(() => tryAttach(retry - 1), 300);
+        };
+        tryAttach();
+      };
+      const lv = window.__localVideo;
+      if (lv && webrtc.localStream) { lv.srcObject = webrtc.localStream; } else { var _lv = lv; setTimeout(function() { var lv2 = window.__localVideo; if (lv2 && webrtc.localStream) lv2.srcObject = webrtc.localStream; }, 500); }
+      webrtc.onIceCandidate = (candidate) => {
+        socketService.emitToPython('ice_candidate', { toUserId: targetUserId, candidate: candidate.toJSON() });
+      };
+      setCallState({ active: true, type: isVideo ? 'video' : 'voice', status: 'calling', remoteStream: null, remoteUser: { id: targetUserId } });
+      const offer = await webrtc.createOffer();
+      socketService.emitToPython('call_user', { toUserId: targetUserId, fromUserId: currentUser?.id, offer, isVideo });
+    } catch (err) {
+      console.error('call error:', err);
+      setCallState({ active: false, type: null, status: '', remoteStream: null, remoteUser: null });
+    }
+  }, [currentUser, endCall]);
+
+  const acceptCall = useCallback(async () => {
+    try {
+      const { offer, fromUserId } = window.__pendingCallOffer || {};
+      if (!offer) return;
+      window.__callRemoteUserId = fromUserId;
+      const webrtc = (await import('../../services/webrtc')).default;
+      webrtc.pc = null;
+      await webrtc.startLocalStream(callState.type === 'video');
+      webrtc.onCallConnected = () => setCallState(prev => ({ ...prev, status: 'connected' }));
+      webrtc.onCallEnded = () => endCall();
+      webrtc.onRemoteStream = (stream) => {
+        console.log('📹 Remote stream received');
+        const tryAttach = (retry = 5) => {
+          const rv = window.__remoteVideo;
+          if (rv) { rv.srcObject = stream; rv.style.display = 'block'; rv.play().catch(e => {}); console.log('✅ Remote video attached'); }
+          else if (retry > 0) setTimeout(() => tryAttach(retry - 1), 300);
+        };
+        tryAttach();
+      };
+      const lv = window.__localVideo;
+      if (lv && webrtc.localStream) { lv.srcObject = webrtc.localStream; } else { var _lv = lv; setTimeout(function() { var lv2 = window.__localVideo; if (lv2 && webrtc.localStream) lv2.srcObject = webrtc.localStream; }, 500); }
+      webrtc.onIceCandidate = (candidate) => {
+        socketService.emitToPython('ice_candidate', { toUserId: fromUserId, candidate: candidate.toJSON() });
+      };
+      if (window.__pendingIceCandidates) {
+        for (const c of window.__pendingIceCandidates) await webrtc.addIceCandidate(c);
+        window.__pendingIceCandidates = [];
+      }
+      setCallState(prev => ({ ...prev, status: 'connected' }));
+      const answer = await webrtc.handleOffer(offer);
+      socketService.emitToPython('answer_call', { toUserId: fromUserId, answer });
+      window.__pendingCallOffer = null;
+    } catch (err) { console.error('accept call error:', err); }
+  }, [callState.type, endCall]);
+
   const initializeSocket = useCallback((userId) => {
     try {
       const token = localStorage.getItem('token');
-      socketService.connect(token);
+      socketService.connect();
+
+      // Kết nối Python signaling cho WebRTC
+      socketService.connectPython();
+
       socketService.on('new_message', handleNewMessage);
+
+      // WebRTC events qua Python socket
+      socketService.onPython('incoming_call', handleIncomingCall);
+      socketService.onPython('call_answered', handleCallAnswered);
+      socketService.onPython('call_ended', handleCallEnded);
+      socketService.onPython('ice_candidate', handleIceCandidate);
+
       socketService.on('user_status_changed', ({ userId: uid, isOnline }) => {
-        setOnlineUsers(prev => {
-          const s = new Set(prev);
-          isOnline ? s.add(uid) : s.delete(uid);
-          return s;
-        });
+        setOnlineUsers(prev => { const s = new Set(prev); isOnline ? s.add(uid) : s.delete(uid); return s; });
       });
-    } catch (err) {
-      console.error('Socket init error:', err);
-    }
-  }, [handleNewMessage]);
+    } catch (err) { console.error('Socket init error:', err); }
+  }, [handleNewMessage, handleIncomingCall, handleCallAnswered, handleCallEnded, handleIceCandidate, endCall]);
 
   // ============ FILE UPLOAD ============
   const uploadFile = async (file) => {
@@ -500,36 +616,19 @@ const fetchConversations = useCallback(async (userId) => {
 
   // ============ TYPING ============
   const startTyping = () => {
-    if (selectedChat && !String(selectedChat.id).startsWith('mock-')) {
-      socketService.emit('typing', { conversationId: selectedChat.id });
-    }
+    if (selectedChat && !String(selectedChat.id).startsWith('mock-')) socketService.emit('typing', { conversationId: selectedChat.id });
   };
   const stopTyping = () => {
-    if (selectedChat && !String(selectedChat.id).startsWith('mock-')) {
-      socketService.emit('stop_typing', { conversationId: selectedChat.id });
-    }
+    if (selectedChat && !String(selectedChat.id).startsWith('mock-')) socketService.emit('stop_typing', { conversationId: selectedChat.id });
   };
 
   const value = {
-    conversations,
-    selectedChat,
-    messages,
-    loading,
-    error,
-    currentUser,
-    onlineUsers,
-    typingUsers,
-    isInitializing,
-    fetchConversations,
-    createConversation,
-    createGroupConversation,
-    selectChat,
-    setSelectedChat: selectChat,
-    fetchMessages,
-    sendMessage,
-    uploadFile,
-    startTyping,
-    stopTyping,
+    conversations, selectedChat, messages, loading, error, currentUser,
+    onlineUsers, typingUsers, isInitializing, callState,
+    startCall, acceptCall, endCall,
+    fetchConversations, createConversation, createGroupConversation,
+    selectChat, setSelectedChat: selectChat, fetchMessages, sendMessage,
+    uploadFile, startTyping, stopTyping,
     isUserOnline: (uid) => onlineUsers.has(uid),
   };
 

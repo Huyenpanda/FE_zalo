@@ -19,7 +19,7 @@
 
 .modalContent {
   background: white;
-  border-radius: 12px;
+  border-radius: var(--apple-radius-lg);
   width: 400px;
   max-width: 90%;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
@@ -47,9 +47,9 @@
 
 .modalHeader h2 {
   margin: 0;
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 600;
-  color: #333;
+  color: var(--apple-ink);
 }
 
 .closeBtn {
@@ -59,12 +59,12 @@
   background: transparent;
   border-radius: 50%;
   cursor: pointer;
-  color: #7589a3;
+  color: var(--apple-ink-muted-48);
   font-size: 18px;
 }
 
 .closeBtn:hover {
-  background: #f4f4f5;
+  background: var(--apple-canvas-parchment);
 }
 
 .modalBody {
@@ -83,12 +83,12 @@
   cursor: pointer;
   transition: background 0.2s;
   text-align: left;
-  font-size: 15px;
-  color: #333;
+  font-size: var(--apple-caption-size);
+  color: var(--apple-ink);
 }
 
 .menuItem:hover {
-  background: #f4f4f5;
+  background: var(--apple-canvas-parchment);
 }
 
 .itemIcon {
@@ -97,9 +97,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f4f4f5;
+  background: var(--apple-canvas-parchment);
   border-radius: 50%;
-  color: #7589a3;
+  color: var(--apple-ink-muted-48);
   flex-shrink: 0;
 }
 
@@ -149,7 +149,7 @@
 }
 
 .backBtn:hover {
-  background: #f4f4f5;
+  background: var(--apple-canvas-parchment);
 }
 
 .accountHeader {
@@ -186,11 +186,11 @@
 }
 
 .languageOption:hover {
-  background: #f4f4f5;
+  background: var(--apple-canvas-parchment);
 }
 
 .selected {
-  background: #0068ff;
+  background: var(--apple-primary);
   color: #fff;
 }
 
@@ -210,7 +210,7 @@
 }
 
 .supportItem:hover {
-  background: #f4f4f5;
+  background: var(--apple-canvas-parchment);
 }
 
 /* contact modal styles */
@@ -239,5 +239,5 @@
 }
 
 .contactItem:hover {
-  background: #f4f4f5;
+  background: var(--apple-canvas-parchment);
 }

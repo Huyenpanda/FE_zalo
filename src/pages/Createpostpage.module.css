@@ -2,7 +2,7 @@
 
 .page {
   min-height: 100vh;
-  background: #fff;
+  background: var(--apple-canvas);
   max-width: 680px;
   margin: 0 auto;
   display: flex;
@@ -15,10 +15,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  border-bottom: 1px solid #e4e6ea;
+  border-bottom: 1px solid var(--apple-hairline);
   position: sticky;
   top: 0;
-  background: #fff;
+  background: var(--apple-canvas);
   z-index: 10;
 }
 .backBtn {
@@ -38,16 +38,16 @@
 .backBtn:hover { background: #f0f2f5; }
 .title {
   font-size: 18px;
-  font-weight: 700;
-  color: #111;
+  font-weight: 600;
+  color: var(--apple-ink);
   margin: 0;
 }
 .postBtn {
   padding: 8px 20px;
-  border-radius: 20px;
+  border-radius: var(--apple-radius-pill);
   border: none;
-  background: #e4e6eb;
-  color: #aaa;
+  background: var(--apple-surface-pearl);
+  color: var(--apple-ink-muted-48);
   font-size: 15px;
   font-weight: 600;
   cursor: not-allowed;
@@ -58,11 +58,11 @@
   justify-content: center;
 }
 .postBtnActive {
-  background: #0084ff;
-  color: #fff;
+  background: var(--apple-primary);
+  color: var(--apple-body-on-dark);
   cursor: pointer;
 }
-.postBtnActive:hover { background: #006fd6; }
+.postBtnActive:hover { background: var(--apple-primary-focus); }
 
 /* ── USER ROW ── */
 .userRow {
@@ -80,21 +80,21 @@
 }
 .userName {
   font-size: 15px;
-  font-weight: 700;
-  color: #111;
+  font-weight: 600;
+  color: var(--apple-ink);
   margin-bottom: 4px;
 }
 
 /* Privacy picker */
 .privacyWrap { position: relative; }
 .privacyBtn {
-  background: #e4e6eb;
+  background: var(--apple-surface-pearl);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--apple-radius-sm);
   padding: 4px 10px;
   font-size: 13px;
   font-weight: 600;
-  color: #333;
+  color: var(--apple-ink-muted-80);
   cursor: pointer;
   transition: background 0.15s;
 }
@@ -103,7 +103,7 @@
   position: absolute;
   top: 32px;
   left: 0;
-  background: #fff;
+  background: var(--apple-canvas);
   border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.15);
   min-width: 180px;
@@ -124,8 +124,8 @@
   text-align: left;
 }
 .privacyOption:hover { background: #f5f5f5; }
-.privacyOptionActive { font-weight: 700; color: #0084ff; }
-.checkmark { color: #0084ff; font-weight: 700; }
+.privacyOptionActive { font-weight: 700; color: var(--apple-primary); }
+.checkmark { color: var(--apple-primary); font-weight: 700; }
 
 /* ── TEXTAREA ── */
 .textArea {
@@ -133,15 +133,15 @@
   border: none;
   outline: none;
   resize: none;
-  font-size: 18px;
-  color: #111;
+  font-size: var(--apple-body-size);
+  color: var(--apple-ink);
   padding: 4px 16px 12px;
   line-height: 1.5;
   font-family: inherit;
   box-sizing: border-box;
   min-height: 120px;
 }
-.textArea::placeholder { color: #bbb; }
+.textArea::placeholder { color: var(--apple-ink-muted-48); }
 
 /* ── IMAGE GRID ── */
 .imageGrid {
@@ -227,15 +227,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border: 1px solid #e4e6ea;
-  border-radius: 12px;
+  border: 1px solid var(--apple-hairline);
+  border-radius: var(--apple-radius-lg);
   margin: 8px 16px;
   padding: 10px 14px;
 }
 .toolbarLabel {
   font-size: 15px;
   font-weight: 600;
-  color: #444;
+  color: var(--apple-ink-muted-80);
 }
 .toolbarActions {
   display: flex;
@@ -287,7 +287,7 @@
 
 /* ── ADD IMAGE BUTTON EFFECT ── */
 .addMoreImg:active {
-  transform: scale(0.97);
+  transform: scale(0.95);
 }
 
 /* ── TOOLBAR ACTIVE ── */
@@ -368,7 +368,7 @@ button, textarea {
 
 /* ── CLICK FEEDBACK ── */
 button:active {
-  transform: scale(0.97);
+  transform: scale(0.95);
 }
 
 /* ── EXTRA ROW ICON STYLE ── */

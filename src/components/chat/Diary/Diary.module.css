@@ -2,7 +2,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #f6f7fb;
+  background: var(--apple-canvas-parchment);
   min-height: 100vh;
 }
 
@@ -12,16 +12,17 @@
   align-items: center;
   padding: 20px 24px;
   background: #fff;
-  border-bottom: 1px solid #e8ebf1;
+  border-bottom: 1px solid var(--apple-hairline);
 }
 
 .eyebrow {
   margin: 0 0 4px;
-  color: #4e7cff;
+  color: var(--apple-primary);
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  font-family: var(--apple-font-text);
 }
 
 .title {
@@ -33,8 +34,8 @@
 .profilePostsBtn {
   border: none;
   border-radius: 999px;
-  background: #eef4ff;
-  color: #2563eb;
+  background: color-mix(in srgb, var(--apple-primary) 10%, transparent);
+  color: var(--apple-primary);
   padding: 9px 14px;
   font-weight: 600;
   cursor: pointer;
@@ -49,9 +50,9 @@
 
 .stateCard,
 .postCard {
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  background: var(--apple-canvas);
+  border-radius: var(--apple-radius-lg);
+  box-shadow: none;
 }
 
 .stateCard {
@@ -87,21 +88,22 @@
 .authorName {
   margin: 0;
   font-size: 15px;
-  font-weight: 700;
-  color: #111827;
+  font-weight: 600;
+  color: var(--apple-ink);
+  font-family: var(--apple-font-display);
 }
 
 .meta {
   margin: 2px 0 0;
   font-size: 12px;
-  color: #6b7280;
+  color: var(--apple-ink-muted-48);
 }
 
 .privacyBadge {
   padding: 6px 10px;
   border-radius: 999px;
-  background: #f3f4f6;
-  color: #4b5563;
+  background: var(--apple-canvas-parchment);
+  color: var(--apple-ink-muted-80);
   font-size: 12px;
   font-weight: 600;
 }
@@ -109,7 +111,7 @@
 .postContent {
   margin: 0 0 12px;
   line-height: 1.6;
-  color: #374151;
+  color: var(--apple-ink-muted-80);
   white-space: pre-wrap;
 }
 
@@ -147,8 +149,8 @@
 
 .actionBtn {
   align-self: flex-start;
-  background: #eef4ff;
-  color: #2563eb;
+  background: var(--apple-surface-pearl);
+  color: var(--apple-primary);
 }
 
 .commentComposer {
@@ -159,14 +161,14 @@
 
 .commentInput {
   flex: 1;
-  border: 1px solid #e5e7eb;
+  border: 1px solid rgba(0,0,0,0.08);
   border-radius: 999px;
   padding: 8px 12px;
   font-size: 13px;
 }
 
 .sendBtn {
-  background: #2563eb;
+  background: var(--apple-primary);
   color: white;
 }
 

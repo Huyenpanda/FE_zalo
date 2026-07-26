@@ -4,26 +4,29 @@ import { io } from 'socket.io-client';
 class SocketService {
   constructor() {
     this.socket = null;
+    this.socketPython = null;
     this.listeners = new Map();
+    this.pythonListeners = new Map();
   }
 
   /**
    * Kết nối đến WebSocket server
    * @param {string} userId - ID của user hiện tại
    */
-  connect(userId) {
-    if (this.socket?.connected) {
-      console.log('Socket already connected');
-      return this.socket;
-    }
+  connect() {
+    var _this = this;
+    if (this.socket) { this.socket.disconnect(); this.socket = null; }
 
-    const socketUrl = process.env.REACT_APP_SOCKET_URL || 'http://localhost:50646';
+    const socketUrl = process.env.REACT_APP_SOCKET_URL || '';
     const token = localStorage.getItem('token');
+    const getUserId = function() {
+      try { return String(JSON.parse(localStorage.getItem('user') || '{}').id || ''); } catch(e) { return ''; }
+    }();
 
     this.socket = io(socketUrl, {
       auth: {
         token: token,
-        userId: userId
+        userId: getUserId
       },
       reconnection: true,
       reconnectionDelay: 1000,
@@ -33,7 +36,13 @@ class SocketService {
     // Event: Kết nối thành công
     this.socket.on('connect', () => {
       console.log('✅ Connected to socket server');
-      this.socket.emit('user:online', userId);
+      var uid = getUserId;
+      this.socket.emit('user:online', uid);
+      this.socket.emit('join_user', uid);
+      // Gắn lại tất cả listeners đã đăng ký
+      this.listeners.forEach((callbacks, event) => {
+        callbacks.forEach((cb) => this.socket.on(event, cb));
+      });
     });
 
     // Event: Ngắt kết nối
@@ -54,6 +63,25 @@ class SocketService {
     return this.socket;
   }
 
+  connectPython() {
+    if (this.socketPython?.connected) return this.socketPython;
+    const url = process.env.REACT_APP_PYTHON_SOCKET_URL || 'https://172.20.10.4:3443';
+    const token = localStorage.getItem('token');
+    this.socketPython = io(url, { auth: { token }, reconnection: true, reconnectionDelay: 1000, reconnectionAttempts: 3 });
+    this.socketPython.on('connect', () => {
+      console.log('✅ Connected to Python signaling server');
+      try { const u = JSON.parse(localStorage.getItem('user') || '{}'); if (u.id) this.socketPython.emit('join_user', u.id); } catch {}
+      // Gắn lại listeners đã lưu
+      this.pythonListeners.forEach((callbacks, event) => {
+        this.socketPython.removeAllListeners(event);
+        callbacks.forEach((cb) => this.socketPython.on(event, cb));
+      });
+    });
+    this.socketPython.on('disconnect', () => console.log('❌ Python signaling disconnected'));
+    this.socketPython.on('connect_error', (err) => console.error('❌ Python signaling error:', err));
+    return this.socketPython;
+  }
+
   /**
    * Ngắt kết nối
    */
@@ -62,8 +90,13 @@ class SocketService {
       this.socket.disconnect();
       this.socket = null;
       this.listeners.clear();
-      console.log('Socket disconnected');
     }
+    if (this.socketPython) {
+      this.socketPython.disconnect();
+      this.socketPython = null;
+      this.pythonListeners.clear();
+    }
+    console.log('Socket disconnected');
   }
 
   /**
@@ -294,14 +327,18 @@ class SocketService {
 
   /**
    * Listen to custom event
-   * @param {string} event - Tên event
-   * @param {Function} callback - Callback function
    */
   on(event, callback) {
-    if (!this.socket) return;
-    
-    this.socket.on(event, callback);
-    this.listeners.set(event, callback);
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, []);
+    }
+    const cbs = this.listeners.get(event);
+    if (!cbs.includes(callback)) {
+      cbs.push(callback);
+    }
+    if (this.socket) {
+      this.socket.on(event, callback);
+    }
   }
 
   /**
@@ -323,11 +360,40 @@ class SocketService {
    */
   removeAllListeners() {
     if (!this.socket) return;
-    
-    this.listeners.forEach((callback, event) => {
-      this.socket.off(event, callback);
-    });
+    this.listeners.forEach((callback, event) => { this.socket.off(event, callback); });
     this.listeners.clear();
+  }
+
+  // ============= PYTHON SIGNALING METHODS (WebRTC) =============
+  emitToPython(event, data) {
+    console.log('🟣 emitToPython:', event, 'connected:', this.socketPython?.connected);
+    if (!this.socketPython?.connected) {
+      console.warn('⚠️ Python socket not connected, connecting...');
+      this.connectPython();
+      setTimeout(() => {
+        if (this.socketPython?.connected) { this.socketPython.emit(event, data); console.log('🟣 sent:', event); }
+        else console.error('❌ Python socket still not connected');
+      }, 1000);
+      return;
+    }
+    this.socketPython.emit(event, data);
+  }
+
+  onPython(event, callback) {
+    console.log('🟣 onPython:', event);
+    if (!this.pythonListeners.has(event)) this.pythonListeners.set(event, []);
+    const cbs = this.pythonListeners.get(event);
+    if (!cbs.includes(callback)) cbs.push(callback);
+    if (this.socketPython?.connected) {
+      this.socketPython.on(event, callback);
+    } else {
+      this.connectPython();
+    }
+  }
+
+  offPython(event) {
+    const cb = this.pythonListeners.get(event);
+    if (cb && this.socketPython) { this.socketPython.off(event, cb); this.pythonListeners.delete(event); }
   }
 }
 

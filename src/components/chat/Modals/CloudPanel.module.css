@@ -61,7 +61,7 @@
 
 .cloudIcon {
   font-size: 64px;
-  color: #0068ff;
+  color: var(--apple-primary);
   margin-bottom: 16px;
 }
 
@@ -141,9 +141,9 @@
 .viewBtn {
   width: 100%;
   padding: 12px;
-  border: 1px solid #0068ff;
+  border: 1px solid var(--apple-primary);
   background: white;
-  color: #0068ff;
+  color: var(--apple-primary);
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
@@ -188,7 +188,7 @@
 .upgradeBtn {
   padding: 8px 16px;
   border: none;
-  background: #0068ff;
+  background: var(--apple-primary);
   color: white;
   border-radius: 6px;
   cursor: pointer;

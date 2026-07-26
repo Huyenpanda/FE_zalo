@@ -10,8 +10,8 @@
 }
 
 .screenshotModal {
-  background: #fff;
-  border-radius: 12px;
+  background: var(--apple-canvas);
+  border-radius: var(--apple-radius-lg);
   width: 100%;
   max-width: 360px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
@@ -23,8 +23,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  border-bottom: 1px solid #e5e5e5;
-  background: #f9f9f9;
+  border-bottom: 1px solid var(--apple-hairline);
+  background: var(--apple-canvas-parchment);
 }
 
 .screenshotHeader h3 {
@@ -38,7 +38,7 @@
   border: none;
   font-size: 20px;
   cursor: pointer;
-  color: #7589a3;
+  color: var(--apple-ink-muted-48);
   padding: 4px;
   width: 32px;
   height: 32px;
@@ -50,7 +50,7 @@
 }
 
 .closeBtn:hover {
-  background: #e5e7eb;
+  background: var(--apple-canvas-parchment);
 }
 
 .screenshotContent {
@@ -60,7 +60,7 @@
 
 .icon {
   font-size: 64px;
-  color: #0068ff;
+  color: var(--apple-primary);
   margin-bottom: 20px;
   display: block;
 }
@@ -81,13 +81,13 @@
   margin: 12px 0 8px;
   font-size: 16px;
   font-weight: 600;
-  color: #333;
+  color: var(--apple-ink);
 }
 
 .screenshotContent p {
   margin: 0;
   font-size: 13px;
-  color: #7589a3;
+  color: var(--apple-ink-muted-48);
 }
 
 .actions {
@@ -95,7 +95,7 @@
   gap: 12px;
   justify-content: flex-end;
   padding: 20px;
-  border-top: 1px solid #e5e5e5;
+  border-top: 1px solid var(--apple-hairline);
 }
 
 .cancelBtn,
@@ -113,23 +113,21 @@
 }
 
 .cancelBtn {
-  background: #e5e7eb;
-  color: #333;
+  background: var(--apple-surface-pearl);
+  color: var(--apple-ink-muted-80);
   flex: 1;
 }
 
 .cancelBtn:hover {
-  background: #d1d5db;
+  background: var(--apple-canvas-parchment);
 }
 
 .captureBtn {
-  background: #0068ff;
-  color: #fff;
+  background: var(--apple-primary);
+  color: var(--apple-body-on-dark);
   flex: 1;
 }
 
 .captureBtn:hover {
-  background: #0052cc;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 104, 255, 0.3);
+  background: var(--apple-primary-focus);
 }

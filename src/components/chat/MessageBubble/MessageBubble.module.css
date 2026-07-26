@@ -5,8 +5,8 @@
 }
 
 .dateLabel span {
-  background: rgba(0, 0, 0, 0.05);
-  color: #7589a3;
+  background: color-mix(in srgb, var(--apple-ink) 8%, transparent);
+  color: var(--apple-ink-muted-48);
   font-size: 12px;
   padding: 4px 12px;
   border-radius: 12px;
@@ -17,6 +17,14 @@
   gap: 8px;
   margin-bottom: 4px;
   max-width: 70%;
+}
+
+@media (max-width: 640px) {
+  .messageWrapper { max-width: 85%; }
+  .messageBubble { padding: 8px 12px !important; border-radius: 14px !important; }
+  .messageText { font-size: 14px !important; }
+  .messageTime { font-size: 10px !important; }
+  .senderAvatar { width: 24px !important; height: 24px !important; }
 }
 
 .messageWrapper.sent {
@@ -82,21 +90,20 @@
 }
 
 .sent .messageBubble {
-  background: #0068ff;
+  background: var(--apple-primary);
   border-bottom-right-radius: 4px;
 }
 
 .received .messageBubble {
-  background: #fff;
+  background: var(--apple-canvas);
   border-bottom-left-radius: 4px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
 .messageText {
   margin: 0;
   font-size: 14px;
   line-height: 1.5;
-  color: #333;
+  color: var(--apple-ink);
 }
 
 .sent .messageText {
@@ -123,7 +130,7 @@
 
 .messageTime {
   font-size: 11px;
-  color: #7589a3;
+  color: var(--apple-ink-muted-48);
 }
 
 .reactions {
@@ -171,9 +178,7 @@
   transition: transform 0.2s;
 }
 
-.attachmentImage:hover {
-  transform: scale(1.02);
-}
+/* Attachment image hover removed per Apple design spec */
 
 .imageDownloadBtn {
   position: absolute;
@@ -214,13 +219,12 @@
 
 .fileAttachment:hover {
   background: #e4e6eb;
-  transform: translateY(-2px);
 }
 
 .fileIcon {
   width: 40px;
   height: 40px;
-  background: #0068ff;
+  background: var(--apple-primary);
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -247,13 +251,13 @@
 
 .fileSize {
   font-size: 11px;
-  color: #7589a3;
+  color: var(--apple-ink-muted-48);
 }
 
 .downloadIcon {
   width: 32px;
   height: 32px;
-  background: #0068ff;
+  background: var(--apple-primary);
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -265,5 +269,5 @@
 }
 
 .fileAttachment:hover .downloadIcon {
-  background: #0052cc;
+  background: var(--apple-primary-focus);
 }

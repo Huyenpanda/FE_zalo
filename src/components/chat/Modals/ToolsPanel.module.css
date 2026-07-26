@@ -72,7 +72,7 @@
 }
 
 .card:hover {
-  border-color: #0068ff;
+  border-color: var(--apple-primary);
   box-shadow: 0 4px 12px rgba(0, 104, 255, 0.1);
   transform: translateY(-2px);
 }

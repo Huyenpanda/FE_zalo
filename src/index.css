@@ -4,8 +4,8 @@
 
 :root {
   /* Color Palette */
-  --primary-color: #0068ff;
-  --primary-hover: #0052cc;
+  --primary-color: #0066cc;
+  --primary-hover: #0071e3;
   --primary-light: #e8f0ff;
   --primary-very-light: #f0f6ff;
 
@@ -716,4 +716,22 @@ select:focus-visible {
 .App {
   height: 100vh;
   width: 100%;
+}
+
+/* ── Responsive Mobile ── */
+@media (max-width: 768px) {
+  html { font-size: 14px; }
+  body { overflow-x: hidden; }
+  .App { height: 100dvh; }
+}
+@media (max-width: 480px) {
+  html { font-size: 13px; }
+}
+
+/* iPhone notch safe area */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .App {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }

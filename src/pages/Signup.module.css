@@ -3,11 +3,9 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--apple-canvas-parchment);
   padding: 16px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--apple-font-text);
 }
 
 .wrapper {
@@ -20,10 +18,9 @@
 
 .content {
   width: 100%;
-  background: white;
-  border-radius: 16px;
+  background: var(--apple-canvas);
+  border-radius: 0;
   padding: 32px 24px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   max-height: 90vh;
   overflow-y: auto;
 }
@@ -31,34 +28,23 @@
 .content::-webkit-scrollbar {
   width: 6px;
 }
-
-.content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.content::-webkit-scrollbar-thumb {
-  background: #ddd;
-  border-radius: 3px;
-}
-
-.content::-webkit-scrollbar-thumb:hover {
-  background: #bbb;
-}
+.content::-webkit-scrollbar-track { background: transparent; }
+.content::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+.content::-webkit-scrollbar-thumb:hover { background: #bbb; }
 
 .title {
-  font-size: 32px;
-  font-weight: bold;
-  color: #0084ff;
-  margin: 0;
-  margin-bottom: 8px;
+  font-size: 40px;
+  font-weight: 600;
+  color: var(--apple-ink);
+  margin: 0 0 8px;
   text-align: center;
+  font-family: var(--apple-font-display);
 }
 
 .subtitle {
-  font-size: 16px;
-  color: #666;
-  margin: 0;
-  margin-bottom: 32px;
+  font-size: var(--apple-body-size);
+  color: var(--apple-ink-muted-48);
+  margin: 0 0 32px;
   text-align: center;
 }
 
@@ -72,26 +58,27 @@
 
 .input {
   width: 100%;
-  background-color: #f2f2f7;
-  border: 1px solid #e5e5ea;
-  border-radius: 12px;
-  padding: 14px 16px;
-  font-size: 16px;
+  background-color: var(--apple-canvas);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: var(--apple-radius-pill);
+  padding: 12px 20px;
+  font-size: var(--apple-body-size);
   box-sizing: border-box;
   font-family: inherit;
   transition: all 0.2s ease;
+  color: var(--apple-ink);
 }
 
 .input:focus {
   outline: none;
-  border-color: #0084ff;
-  background-color: #fff;
-  box-shadow: 0 0 0 3px rgba(0, 132, 255, 0.1);
+  border-color: var(--apple-primary);
+  background-color: var(--apple-canvas);
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.12);
 }
 
 .input:disabled {
-  background-color: #f9f9f9;
-  color: #999;
+  background-color: var(--apple-canvas-parchment);
+  color: var(--apple-ink-muted-48);
   cursor: not-allowed;
 }
 
@@ -99,7 +86,7 @@
   background-color: #fee;
   color: #c00;
   border: 1px solid #fcc;
-  border-radius: 8px;
+  border-radius: var(--apple-radius-sm);
   padding: 12px 16px;
   margin-bottom: 16px;
   font-size: 14px;
@@ -108,13 +95,13 @@
 
 .button {
   width: 100%;
-  background-color: #0084ff;
+  background-color: var(--apple-primary);
   border: none;
-  border-radius: 12px;
-  padding: 16px;
-  font-size: 16px;
-  font-weight: 600;
-  color: white;
+  border-radius: var(--apple-radius-pill);
+  padding: 11px 22px;
+  font-size: var(--apple-body-size);
+  font-weight: 400;
+  color: var(--apple-body-on-dark);
   cursor: pointer;
   margin-top: 8px;
   transition: all 0.2s ease;
@@ -125,19 +112,17 @@
 }
 
 .button:hover:not(:disabled) {
-  background-color: #0073e6;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 132, 255, 0.4);
+  background-color: var(--apple-primary-focus);
 }
 
 .button:active:not(:disabled) {
-  transform: translateY(0);
+  transform: scale(0.95);
 }
 
 .buttonDisabled {
   opacity: 0.6;
   cursor: not-allowed;
-  background-color: #0084ff;
+  background-color: var(--apple-primary);
 }
 
 .spinner {
@@ -151,9 +136,7 @@
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
 .footer {
@@ -166,7 +149,7 @@
 
 .footerText {
   font-size: 15px;
-  color: #666;
+  color: var(--apple-ink-muted-48);
 }
 
 .linkButton {
@@ -174,7 +157,7 @@
   border: none;
   padding: 0;
   font-size: 15px;
-  color: #0084ff;
+  color: var(--apple-primary);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -182,18 +165,16 @@
 
 .linkButton:hover {
   text-decoration: underline;
-  color: #0073e6;
+  color: var(--apple-primary-focus);
 }
 
 @media (max-width: 480px) {
   .content {
     padding: 24px 16px;
   }
-
   .title {
     font-size: 28px;
   }
-
   .subtitle {
     font-size: 14px;
     margin-bottom: 24px;

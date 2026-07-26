@@ -9,7 +9,7 @@ import { useChat } from '../../../services/context/ChatContext';
 import { useAuth } from '../../../services/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-const Sidebar = ({ conversations = [], selectedChat, onSelectChat, onViewChange, currentView }) => {
+const Sidebar = ({ conversations = [], selectedChat, onSelectChat, onViewChange, currentView, navOnly = false }) => {
   const navigate = useNavigate();
   const { createGroupConversation, isInitializing } = useChat();
   const { user: currentUser } = useAuth();
@@ -42,16 +42,19 @@ const Sidebar = ({ conversations = [], selectedChat, onSelectChat, onViewChange,
 
   const handleContactsClick = () => {
     setActiveNav('contacts');
+    if (navOnly) { navigate('/chat'); return; }
     if (onViewChange) onViewChange('contacts');
   };
 
   const handleMessagesClick = () => {
     setActiveNav('messages');
+    if (navOnly) { navigate('/chat'); return; }
     if (onViewChange) onViewChange('messages');
   };
 
   const handleDiaryClick = () => {
     setActiveNav('diary');
+    if (navOnly) { navigate('/chat'); return; }
     if (onViewChange) onViewChange('diary');
   };
 
@@ -165,69 +168,37 @@ const Sidebar = ({ conversations = [], selectedChat, onSelectChat, onViewChange,
         }
       `}</style>
 
-      <div className={styles.sidebarContainer}>
-        {/* Left Navigation Bar */}
+      {navOnly ? (
+        <div className={styles.sidebarContainer}>
+          <div className={styles.leftNav}>
+            <div className={styles.navTop}>
+              <div className={styles.userAvatar}>
+                <img src={currentUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.fullName || 'User')}&background=0084ff&color=fff`} alt="User" onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }} />
+              </div>
+              <button className={`${styles.navItem} ${activeNav === 'messages' ? styles.active : ''}`} onClick={handleMessagesClick} title="Tin nhắn"><i className="fas fa-comment-dots"></i></button>
+              <button className={`${styles.navItem} ${activeNav === 'contacts' ? styles.active : ''}`} onClick={handleContactsClick} title="Danh bạ"><i className="fas fa-address-book"></i></button>
+              <button className={`${styles.navItem} ${activeNav === 'diary' ? styles.active : ''}`} onClick={handleDiaryClick} title="Nhật ký"><i className="fas fa-book-open"></i></button>
+            </div>
+            <div className={styles.navBottom}>
+              <button className={styles.navItem} title="Cài đặt" onClick={() => setShowSettings(true)}><i className="fas fa-cog"></i></button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className={styles.sidebarContainer}>
         <div className={styles.leftNav}>
           <div className={styles.navTop}>
             <div className={styles.userAvatar}>
-              <img
-                src={currentUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.fullName || 'User')}&background=0084ff&color=fff`}
-                alt="User"
-                onClick={() => navigate('/profile')}
-                style={{ cursor: 'pointer' }}
-              />
+              <img src={currentUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.fullName || 'User')}&background=0084ff&color=fff`} alt="User" onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }} />
             </div>
-
-            <button
-              className={`${styles.navItem} ${activeNav === 'messages' ? styles.active : ''}`}
-              onClick={handleMessagesClick}
-              title="Tin nhắn"
-            >
-              <i className="fas fa-comment-dots"></i>
-              <span className={styles.navBadge}>5+</span>
-            </button>
-
-            <button
-              className={`${styles.navItem} ${activeNav === 'contacts' ? styles.active : ''}`}
-              onClick={handleContactsClick}
-              title="Danh bạ"
-            >
-              <i className="fas fa-address-book"></i>
-            </button>
-
-            <button
-              className={`${styles.navItem} ${activeNav === 'diary' ? styles.active : ''}`}
-              onClick={handleDiaryClick}
-              title="Nhật ký"
-            >
-              <i className="fas fa-book-open"></i>
-            </button>
+            <button className={`${styles.navItem} ${activeNav === 'messages' ? styles.active : ''}`} onClick={handleMessagesClick} title="Tin nhắn"><i className="fas fa-comment-dots"></i><span className={styles.navBadge}>5+</span></button>
+            <button className={`${styles.navItem} ${activeNav === 'contacts' ? styles.active : ''}`} onClick={handleContactsClick} title="Danh bạ"><i className="fas fa-address-book"></i></button>
+            <button className={`${styles.navItem} ${activeNav === 'diary' ? styles.active : ''}`} onClick={handleDiaryClick} title="Nhật ký"><i className="fas fa-book-open"></i></button>
           </div>
-
           <div className={styles.navBottom}>
-            <button
-              className={styles.navItem}
-              title="Cloud của tôi"
-              onClick={() => setShowCloud(true)}
-            >
-              <i className="fas fa-cloud"></i>
-            </button>
-
-            <button
-              className={styles.navItem}
-              title="Công cụ"
-              onClick={() => setShowTools(true)}
-            >
-              <i className="fas fa-briefcase"></i>
-            </button>
-
-            <button
-              className={styles.navItem}
-              title="Cài đặt"
-              onClick={() => setShowSettings(true)}
-            >
-              <i className="fas fa-cog"></i>
-            </button>
+            <button className={styles.navItem} title="Cloud của tôi" onClick={() => setShowCloud(true)}><i className="fas fa-cloud"></i></button>
+            <button className={styles.navItem} title="Công cụ" onClick={() => setShowTools(true)}><i className="fas fa-briefcase"></i></button>
+            <button className={styles.navItem} title="Cài đặt" onClick={() => setShowSettings(true)}><i className="fas fa-cog"></i></button>
           </div>
         </div>
 
@@ -381,9 +352,9 @@ const Sidebar = ({ conversations = [], selectedChat, onSelectChat, onViewChange,
             </div>
           </div>
         )}
-      </div>
+        </div>
+      )}
 
-      {/* Create Group Modal */}
       {showCreateGroup && (
         <div className={styles.modalOverlay} onClick={resetCreateGroupState}>
           <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>

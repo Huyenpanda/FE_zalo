@@ -16,7 +16,7 @@
   background: none;
   font-size: 1.6rem;
   cursor: pointer;
-  color: #333;
+  color: var(--apple-ink);
 }
 
 .pageTitle {
@@ -47,7 +47,7 @@
 .commentTitle {
   margin: 0;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .commentCount {
@@ -65,15 +65,15 @@
 .commentInput {
   flex: 1;
   padding: 10px 14px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid rgba(0,0,0,0.08);
   border-radius: 999px;
-  background: #fafafa;
+  background: var(--apple-canvas);
   font-size: 0.95rem;
 }
 
 .sendCommentBtn {
   border: none;
-  background: #0084ff;
+  background: var(--apple-primary);
   color: #fff;
   padding: 10px 16px;
   border-radius: 999px;
@@ -97,8 +97,8 @@
   gap: 12px;
   padding: 14px;
   background: #fff;
-  border: 1px solid #eee;
-  border-radius: 16px;
+  border: 1px solid var(--apple-hairline);
+  border-radius: var(--apple-radius-lg);
 }
 
 .commentAvatar {
@@ -130,8 +130,12 @@
 
 .noComments {
   padding: 20px;
-  border: 1px dashed #d9d9d9;
-  border-radius: 16px;
+  border: 1px dashed var(--apple-hairline);
+  border-radius: var(--apple-radius-lg);
   color: #666;
   text-align: center;
+}
+
+button:active {
+  transform: scale(0.95);
 }

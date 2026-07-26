@@ -11,7 +11,7 @@
 
 .emojiPicker {
   background: #fff;
-  border-radius: 16px 16px 0 0;
+  border-radius: var(--apple-radius-lg) var(--apple-radius-lg) 0 0;
   width: 100%;
   max-width: 500px;
   display: flex;
@@ -79,7 +79,7 @@
 }
 
 .categoryBtn.active {
-  background: #0068ff;
+  background: var(--apple-primary);
 }
 
 .emojiGrid {

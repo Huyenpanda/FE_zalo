@@ -1,19 +1,46 @@
 .sidebarContainer {
   display: flex;
   height: 100vh;
-  background: #fff;
+  height: 100dvh;
+  background: var(--apple-canvas);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (max-width: 768px) {
+  .sidebarContainer { height: 100dvh; }
+  .sidebar { width: 280px !important; }
+  .leftNav { width: 56px !important; }
+  .navItem { width: 40px !important; height: 40px !important; font-size: 18px !important; }
+  .userAvatar { width: 36px !important; height: 36px !important; }
+  .searchBar { padding: 6px 10px !important; }
+  .conversationName { font-size: 14px !important; }
+}
+
+/* Mobile: sidebar full-width */
+@media (max-width: 640px) {
+  .sidebarContainer { width: 100% !important; height: 100% !important; }
+  .leftNav { display: none !important; }
+  .sidebar {
+    width: 100% !important;
+    height: 100% !important;
+    border-right: none !important;
+    overflow-y: auto;
+  }
+  .header { padding: 8px 10px; }
+  .searchBar { padding: 6px 10px !important; }
+  .conversationName { font-size: 14px !important; }
+  .lastMessage { font-size: 12px !important; }
 }
 
 /* Left Navigation Bar */
 .leftNav {
   width: 68px;
-  background: linear-gradient(180deg, #0068ff 0%, #0091ff 100%);
+  background: var(--apple-surface-black);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding: 12px 0;
   flex-shrink: 0;
-  box-shadow: 2px 0 8px rgba(0, 104, 255, 0.15);
 }
 
 .navTop,
@@ -51,25 +78,24 @@
   height: 48px;
   border: none;
   background: transparent;
-  border-radius: 12px;
+  border-radius: var(--apple-radius-sm);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.7);
   font-size: 20px;
   transition: all 0.2s;
   position: relative;
 }
 
 .navItem:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.1);
   color: #fff;
-  transform: translateY(-2px);
 }
 
 .navItem.active {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.15);
   color: #fff;
 }
 
@@ -89,14 +115,14 @@
   font-weight: 600;
   min-width: 18px;
   text-align: center;
-  border: 2px solid #0068ff;
+  border: 2px solid var(--apple-primary);
 }
 
 .sidebar {
   width: 360px;
   height: 100vh;
-  background: #fff;
-  border-right: 1px solid #e5e5e5;
+  background: var(--apple-canvas);
+  border-right: 1px solid var(--apple-hairline);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -108,8 +134,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid #e5e5e5;
-  background: #fff;
+  border-bottom: 1px solid var(--apple-hairline);
+  background: var(--apple-canvas);
 }
 
 .userProfile {
@@ -147,13 +173,13 @@
   position: relative;
   display: flex;
   align-items: center;
-  background: #f4f4f5;
-  border-radius: 8px;
-  padding: 8px 12px;
+  background: var(--apple-canvas-parchment);
+  border-radius: var(--apple-radius-pill);
+  padding: 10px 16px;
 }
 
 .searchBar i {
-  color: #7589a3;
+  color: var(--apple-ink-muted-48);
   font-size: 14px;
   margin-right: 8px;
 }
@@ -163,12 +189,12 @@
   background: transparent;
   outline: none;
   width: 100%;
-  font-size: 14px;
-  color: #333;
+  font-size: var(--apple-caption-size);
+  color: var(--apple-ink);
 }
 
 .searchBar input::placeholder {
-  color: #7589a3;
+  color: var(--apple-ink-muted-48);
 }
 
 .actions {
@@ -194,7 +220,7 @@
 }
 
 .actionBtn i {
-  color: #7589a3;
+  color: var(--apple-ink-muted-48);
   font-size: 16px;
 }
 
@@ -204,8 +230,8 @@
   align-items: center;
   padding: 8px 16px;
   gap: 8px;
-  border-bottom: 1px solid #e5e5e5;
-  background: #fff;
+  border-bottom: 1px solid var(--apple-hairline);
+  background: var(--apple-canvas);
 }
 
 .tab {
@@ -230,8 +256,8 @@
 }
 
 .tab.active {
-  color: #0068ff;
-  background: #e5f1ff;
+  color: var(--apple-primary);
+  background: color-mix(in srgb, var(--apple-primary) 10%, transparent);
 }
 
 .tabBadge {
@@ -326,8 +352,8 @@
 
 .modalInput {
   width: 100%;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
+  border: 1px solid var(--apple-hairline);
+  border-radius: var(--apple-radius-sm);
   padding: 10px 12px;
   font-size: 14px;
   outline: none;
@@ -335,8 +361,8 @@
 }
 
 .modalInput:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+  border-color: var(--apple-primary);
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.12);
 }
 
 .selectedChips {
@@ -351,8 +377,8 @@
   gap: 6px;
   padding: 6px 10px;
   border-radius: 999px;
-  background: #eff6ff;
-  color: #2563eb;
+  background: color-mix(in srgb, var(--apple-primary) 10%, transparent);
+  color: var(--apple-primary);
   font-size: 12px;
 }
 
@@ -386,8 +412,8 @@
 }
 
 .memberItemActive {
-  border-color: #2563eb;
-  background: #f2f8ff;
+  border-color: var(--apple-primary);
+  background: color-mix(in srgb, var(--apple-primary) 8%, transparent);
 }
 
 .memberMeta {
@@ -400,8 +426,8 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: color-mix(in srgb, var(--apple-primary) 15%, transparent);
+  color: var(--apple-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -439,7 +465,7 @@
 .secondaryBtn,
 .primaryBtn {
   border: none;
-  border-radius: 10px;
+  border-radius: var(--apple-radius-sm);
   padding: 10px 14px;
   font-size: 14px;
   font-weight: 600;
@@ -452,7 +478,7 @@
 }
 
 .primaryBtn {
-  background: #2563eb;
+  background: var(--apple-primary);
   color: #fff;
 }
 
@@ -494,11 +520,11 @@
 }
 
 .conversationItem:hover {
-  background: #f4f4f5;
+  background: var(--apple-canvas-parchment);
 }
 
 .conversationItem.selected {
-  background: #e5f1ff;
+  background: color-mix(in srgb, var(--apple-primary) 8%, transparent);
 }
 
 .conversationAvatar {
@@ -533,8 +559,8 @@
   right: -2px;
   width: 18px;
   height: 18px;
-  background: #0068ff;
-  color: #fff;
+  background: var(--apple-primary);
+  color: var(--apple-body-on-dark);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -557,8 +583,8 @@
 
 .conversationName {
   font-size: 15px;
-  font-weight: 500;
-  color: #333;
+  font-weight: 400;
+  color: var(--apple-ink);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -571,7 +597,7 @@
 .verifiedBadge {
   width: 14px;
   height: 14px;
-  background: #0068ff;
+  background: var(--apple-primary);
   color: #fff;
   border-radius: 50%;
   display: inline-flex;
@@ -582,8 +608,8 @@
 }
 
 .conversationTime {
-  font-size: 12px;
-  color: #7589a3;
+  font-size: var(--apple-fine-size);
+  color: var(--apple-ink-muted-48);
   flex-shrink: 0;
   margin-left: 8px;
 }
@@ -596,8 +622,8 @@
 }
 
 .lastMessage {
-  font-size: 13px;
-  color: #7589a3;
+  font-size: var(--apple-fine-size);
+  color: var(--apple-ink-muted-48);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -606,7 +632,7 @@
 }
 
 .conversationItem.selected .lastMessage {
-  color: #0068ff;
+  color: var(--apple-primary);
 }
 
 .unreadBadge {
@@ -625,6 +651,10 @@
   position: absolute;
   top: 12px;
   right: 16px;
-  color: #7589a3;
+  color: var(--apple-ink-muted-48);
   font-size: 12px;
+}
+
+button:active {
+  transform: scale(0.95);
 }

@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }) => {
           setToken(storedToken);
           setUser(userData);
           api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-          socketService.connect(storedToken);
+          socketService.connect();
           if (userData?.id) socketService.joinUser(userData.id);
         }
       } catch (err) {
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
       setUser(normalizedUser);
 
       api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-      socketService.connect(newToken);
+      socketService.connect();
       if (userData?.id) socketService.joinUser(userData.id);
 
       return { success: true };
@@ -99,7 +99,7 @@ export const AuthProvider = ({ children }) => {
       setToken(newToken);
       setUser(userData);
       api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-      socketService.connect(newToken);
+      socketService.connect();
       if (userData?.id) socketService.joinUser(userData.id);
 
       return { success: true };

@@ -5,9 +5,9 @@ import InputBox from '../InputBox/InputBox';
 import { useChat } from '../../../services/context/ChatContext';
 import { useNavigate } from 'react-router-dom';
 
-const ChatWindow = ({ selectedChat }) => {
+const ChatWindow = ({ selectedChat, onBack }) => {
   const navigate = useNavigate();
-  const { messages, fetchMessages, currentUser, isInitializing } = useChat();
+  const { messages, fetchMessages, currentUser, isInitializing, callState, startCall, acceptCall, endCall } = useChat();
 
   // Đọc thẳng từ localStorage để tránh stale state
   const currentUserId = React.useMemo(() => {
@@ -28,7 +28,6 @@ const ChatWindow = ({ selectedChat }) => {
     links: true,
     security: false
   });
-  const [callState, setCallState] = useState({ active: false, type: null, status: 'đang gọi' });
   const messagesEndRef = React.useRef(null);
 
   const sortedMessages = useMemo(() => {
@@ -104,9 +103,12 @@ console.log('currentUser:', currentUser?.id);
 console.log('first message:', messages[0]);
   return (
     <div className={styles.chatWindow}>
-      {/* Header */}
-      <div className={styles.header}>
+      {/* Header — Apple style black on mobile */}
+      <div className={`${styles.header} ${styles.headerMobile}`}>
         <div className={styles.chatInfo}>
+          <div className={styles.mobileBackInHeader} onClick={() => onBack?.()}>
+            <i className="fas fa-chevron-left"></i>
+          </div>
           <div className={styles.avatar}>
             <img
               src={selectedChat?.avatar}
@@ -134,18 +136,8 @@ console.log('first message:', messages[0]);
           >
             <i className="fas fa-search"></i>
           </button>
-          <button
-            className={styles.actionBtn}
-            onClick={() => setCallState({ active: true, type: 'voice', status: 'đang đổ chuông' })}
-          >
-            <i className="fas fa-phone"></i>
-          </button>
-          <button
-            className={styles.actionBtn}
-            onClick={() => setCallState({ active: true, type: 'video', status: 'đang đổ chuông' })}
-          >
-            <i className="fas fa-video"></i>
-          </button>
+          <button className={styles.actionBtn} onClick={() => startCall(selectedChat?.userId, false)} title="Gọi thoại"><i className="fas fa-phone"></i></button>
+          <button className={styles.actionBtn} onClick={() => startCall(selectedChat?.userId, true)} title="Gọi video"><i className="fas fa-video"></i></button>
           <button 
             className={styles.actionBtn}
             onClick={() => setShowInfo(!showInfo)}
@@ -157,37 +149,24 @@ console.log('first message:', messages[0]);
 
       {callState.active && (
         <div className={styles.callOverlay}>
-          <div className={styles.callCard}>
-            <div className={styles.callAvatar}>
-              <img src={selectedChat?.avatar} alt={selectedChat?.name} />
-              {callState.type === 'video' ? (
-                <span className={styles.callBadge}>Video</span>
-              ) : (
-                <span className={styles.callBadge}>Audio</span>
-              )}
-            </div>
-            <h2>{selectedChat?.name || 'Người gọi'}</h2>
-            <p>{callState.status === 'đang đổ chuông' ? 'Đang đổ chuông...' : 'Đang kết nối...'}</p>
-            <div className={styles.callControls}>
-              <button
-                className={`${styles.callButton} ${styles.callMute}`}
-                onClick={() => setCallState(prev => ({ ...prev, status: 'đang nói' }))}
-              >
-                <i className="fas fa-microphone-slash"></i>
+          {callState.type === 'video' && (
+            <video id="remoteVideo" ref={el => { if (el) window.__remoteVideo = el; }} className={styles.callRemoteVideo} autoPlay playsInline />
+          )}
+          <video id="localVideo" ref={el => { if (el) window.__localVideo = el; }} className={styles.callLocalVideo} autoPlay playsInline muted />
+          <div className={styles.callInfo}>
+            <h2 className={styles.callName}>{selectedChat?.name || 'Người gọi'}</h2>
+            <p className={styles.callStatus}>{callState.status === 'calling' ? 'Đang gọi...' : callState.status === 'ringing' ? 'Cuộc gọi đến...' : callState.status === 'connected' ? 'Đã kết nối' : ''}</p>
+          </div>
+          <div className={styles.callControls}>
+            <span className={styles.callBadge}>{callState.type === 'video' ? 'Video' : 'Âm thanh'}</span>
+            {callState.status === 'ringing' && (
+              <button className={`${styles.callButton} ${styles.callAnswer}`} onClick={acceptCall}>
+                <i className="fas fa-phone"></i>
               </button>
-              <button
-                className={`${styles.callButton} ${styles.callEnd}`}
-                onClick={() => setCallState({ active: false, type: null, status: 'đã kết thúc' })}
-              >
-                <i className="fas fa-phone-slash"></i>
-              </button>
-              <button
-                className={`${styles.callButton} ${styles.callSwitch}`}
-                onClick={() => setCallState(prev => ({ ...prev, status: 'đã kết nối' }))}
-              >
-                <i className="fas fa-video"></i>
-              </button>
-            </div>
+            )}
+            <button className={`${styles.callButton} ${styles.callEnd}`} onClick={endCall}>
+              <i className="fas fa-phone-slash"></i>
+            </button>
           </div>
         </div>
       )}

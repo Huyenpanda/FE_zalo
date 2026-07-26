@@ -2,8 +2,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../services/context/AuthContext';
+import { useChat } from '../services/context/ChatContext';
 import api from '../services/api';
 import PostItem from '../components/PostItem/PostItem';
+import Sidebar from '../components/chat/Sidebar/Sidebar';
 import styles from './Profilepage.module.css';
 
 
@@ -58,7 +60,7 @@ function ProfileInfo({ user, isMe, onMessage, onEdit, onAvatarChange, coverRef }
             <>
               <div onClick={handleAvatarClick} style={{
                 position: 'absolute', bottom: 4, right: 4,
-                background: '#0084ff', borderRadius: '50%',
+                background: 'var(--apple-primary)', borderRadius: '50%',
                 width: 28, height: 28, display: 'flex',
                 alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
@@ -204,6 +206,7 @@ const MOCK_USER = {
 export default function ProfilePage() {
   const { userId } = useParams();
   const { user: authUser } = useAuth();
+  const { conversations, selectedChat, selectChat, loading: chatLoading, isInitializing, fetchConversations, currentUser: chatCurrentUser } = useChat();
   const navigate = useNavigate();
   const location = useLocation();
   const headerRef = useRef(null);
@@ -525,48 +528,92 @@ const handleSaveProfile = async () => {
   );
 
   return (
-    <div className={styles.page}>
-      {/* Sticky Header */}
-      <div className={`${styles.stickyHeader} ${scrolled ? styles.stickyHeaderVisible : ''}`}>
-        <button className={styles.backBtn} onClick={() => navigate(-1)}>‹</button>
-        <span className={styles.stickyName}>{profileUser?.name}</span>
+    <div className={styles.chatContainer}>
+      {/* NAV SIDEBAR — chỉ icons, không danh sách chat */}
+      <Sidebar navOnly />
+
+      {/* Profile Content */}
+      <div className={styles.page}>
+      {/* Top Bar — chỉ có tên + settings, không cần nút back vì đã có sidebar */}
+      <div className={styles.topBar}>
+        <span className={styles.topBarTitle}>{profileUser?.name || 'Profile'}</span>
         <div style={{ flex: 1 }} />
         {isMe && (
-          <button className={styles.settingsBtn} onClick={() => navigate('/profile/settings')}>
-            ⚙️
+          <button className={styles.topBarSettings} onClick={() => navigate('/profile/settings')}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
           </button>
         )}
       </div>
 
-      {/* Profile Info */}
-      {profileUser && <ProfileInfo user={profileUser} isMe={isMe} onMessage={handleMessage} onEdit={openEditModal} coverRef={coverRef} />}
-
-      {/* Info rows (chỉ hiện cho chính mình) */}
-      {isMe && profileUser && (
-        <div className={styles.infoSection}>
-          {profileUser.username && <InfoRow label="Tên đăng nhập" value={`@${profileUser.username}`} editable={false} />}
-          {profileUser.email && <InfoRow label="Email" value={profileUser.email} editable={true} onPress={() => navigate('/profile/settings')} />}
-          
+      {/* Cover */}
+      {profileUser && (
+        <div className={styles.coverSection} ref={coverRef}>
+          <img src={profileUser.cover || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80'} alt="cover" className={styles.coverImg} />
+          <div className={styles.coverOverlay} />
         </div>
       )}
 
-      {/* Tabs */}
-      <div className={styles.tabs}>
-        {['posts', 'photos', 'info'].map(tab => (
-          <button key={tab} className={`${styles.tab} ${activeTab === tab ? styles.tabActive : ''}`}
-            onClick={() => setActiveTab(tab)}>
-            {{ posts: 'Bài viết', photos: 'Ảnh', info: 'Giới thiệu' }[tab]}
-          </button>
-        ))}
-      </div>
+      {/* Two-column layout */}
+      <div className={styles.layout}>
+        {/* LEFT SIDEBAR */}
+        <aside className={styles.sidebar}>
+          {/* Avatar + Name card */}
+          <div className={styles.sidebarCard}>
+            <div className={styles.sidebarAvatarSection}>
+              <img
+                src={profileUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileUser?.name || 'U')}&background=0066cc&color=fff`}
+                alt={profileUser?.name}
+                className={styles.sidebarAvatar}
+              />
+              <h2 className={styles.sidebarName}>{profileUser?.name}</h2>
+              {profileUser?.bio && <p className={styles.sidebarBio}>{profileUser.bio}</p>}
+            </div>
+            <div className={styles.sidebarActions}>
+              {isMe ? (
+                <button className={styles.sidebarEditBtn} onClick={openEditModal}>✏️ Cập nhật thông tin</button>
+              ) : (
+                <>
+                  <button className={styles.sidebarAddFriendBtn}>➕ Kết bạn</button>
+                  <button className={styles.sidebarMsgBtn} onClick={handleMessage}>💬 Nhắn tin</button>
+                </>
+              )}
+            </div>
+          </div>
 
-      {/* Tab content */}
-      {activeTab === 'posts' && (
-        <div className={styles.postsSection}>
+          {/* Info card */}
+          <div className={styles.sidebarCard}>
+            <h3 className={styles.sidebarCardTitle}>Giới thiệu</h3>
+            <div className={styles.sidebarInfoRows}>
+              {profileUser?.username && <InfoRow label="Username" value={`@${profileUser.username}`} editable={false} />}
+              {profileUser?.email && <InfoRow label="Email" value={profileUser.email} editable={isMe} onPress={() => navigate('/profile/settings')} />}
+              <InfoRow label="Bài viết" value={String(posts.length)} editable={false} />
+            </div>
+          </div>
+
+          {/* Photos card */}
+          <div className={styles.sidebarCard}>
+            <h3 className={styles.sidebarCardTitle}>Ảnh</h3>
+            <div className={styles.sidebarPhotosGrid}>
+              {posts.filter(p => p.image).slice(0, 9).map(p => (
+                <img key={p.id} src={p.image} alt="" className={styles.sidebarPhotoThumb} onClick={() => navigate(`/post/${p.id}`)} />
+              ))}
+              {posts.filter(p => p.image).length === 0 && <p className={styles.sidebarEmptyText}>Chưa có ảnh</p>}
+            </div>
+          </div>
+        </aside>
+
+        {/* RIGHT CONTENT — Posts Feed */}
+        <main className={styles.feed}>
+          {/* Create post box (only for self) */}
           {isMe && profileUser && <CreatePostBox user={profileUser} />}
-          {posts.length === 0
-            ? <div className={styles.emptyPosts}>Chưa có bài viết nào</div>
-            : posts.map(post => (
+
+          {posts.length === 0 ? (
+            <div className={styles.emptyPosts}>Chưa có bài viết nào</div>
+          ) : (
+            posts.map(post => (
               <React.Fragment key={post.id}>
                 <PostItem
                   post={post}
@@ -583,24 +630,15 @@ const handleSaveProfile = async () => {
                         <strong>Bình luận</strong>
                         <span>{` ${post.commentCount || 0} bình luận`}</span>
                       </div>
-                      <button className={styles.closeCommentBtn} onClick={closeComments}>
-                        ✕
-                      </button>
+                      <button className={styles.closeCommentBtn} onClick={closeComments}>✕</button>
                     </div>
                     <div className={styles.commentList}>
                       {(commentsByPost[post.id] || []).length > 0 ? (
                         commentsByPost[post.id].map(comment => (
                           <div key={comment.id} className={styles.commentItem}>
-                            <img
-                              src={comment.user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.user.name || 'U')}&background=0084ff&color=fff`}
-                              alt={comment.user.name}
-                              className={styles.commentAvatar}
-                            />
+                            <img src={comment.user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.user.name || 'U')}&background=0066cc&color=fff`} alt="" className={styles.commentAvatar} />
                             <div className={styles.commentContent}>
-                              <div className={styles.commentMeta}>
-                                <strong>{comment.user.name}</strong>
-                                <span>{formatTime(comment.createdAt)}</span>
-                              </div>
+                              <div className={styles.commentMeta}><strong>{comment.user.name}</strong><span>{formatTime(comment.createdAt)}</span></div>
                               <p>{comment.content}</p>
                             </div>
                           </div>
@@ -610,93 +648,47 @@ const handleSaveProfile = async () => {
                       )}
                     </div>
                     <div className={styles.commentInputRow}>
-                      <img
-                        src={authUser?.avatar || profileUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(authUser?.fullName || 'Bạn')}&background=0084ff&color=fff`}
-                        alt={authUser?.fullName || 'Bạn'}
-                        className={styles.commentAvatar}
-                      />
-                      <input
-                        type="text"
-                        value={commentDraft}
-                        onChange={(e) => setCommentDraft(e.target.value)}
-                        placeholder="Viết bình luận..."
-                        className={styles.commentInput}
-                      />
-                      <button
-                        className={styles.sendCommentBtn}
-                        onClick={() => handleSendComment(post.id)}
-                        disabled={!commentDraft.trim()}
-                      >
-                        Gửi
-                      </button>
+                      <img src={authUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(authUser?.fullName || 'Bạn')}&background=0066cc&color=fff`} alt="" className={styles.commentAvatar} />
+                      <input type="text" value={commentDraft} onChange={e => setCommentDraft(e.target.value)} placeholder="Viết bình luận..." className={styles.commentInput} />
+                      <button className={styles.sendCommentBtn} onClick={() => handleSendComment(post.id)} disabled={!commentDraft.trim()}>Gửi</button>
                     </div>
                   </div>
                 )}
               </React.Fragment>
             ))
-          }
-        </div>
-      )}
-
-      {activeTab === 'photos' && (
-        <div className={styles.photosGrid}>
-          {posts.filter(p => p.image).map(p => (
-            <img key={p.id} src={p.image} alt="" className={styles.photoThumb}
-              onClick={() => navigate(`/post/${p.id}`)} />
-          ))}
-          {posts.filter(p => p.image).length === 0 && (
-            <div className={styles.emptyPosts}>Chưa có ảnh nào</div>
           )}
-        </div>
-      )}
+        </main>
+      </div>
 
-      {activeTab === 'info' && profileUser && (
-        <div className={styles.infoSection}>
-          <InfoRow label="Tên hiển thị" value={profileUser.name} editable={isMe} onPress={() => navigate('/profile/settings')} />
-          {profileUser.username && <InfoRow label="Username" value={`@${profileUser.username}`} editable={false} />}
-          
-        </div>
-      )}
+      {/* Photos tab content (vẫn giữ cho tab photos) */}
+      {activeTab === 'photos' && false}
+      {activeTab === 'info' && false}
       {showEditModal && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
-        }}>
-          <div style={{
-            background: '#fff', borderRadius: 16, padding: 24,
-            width: '90%', maxWidth: 420, display: 'flex', flexDirection: 'column', gap: 16,
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: 18 }}>Cập nhật thông tin</h3>
-              <button onClick={() => setShowEditModal(false)}
-                style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }}>✕</button>
+        <div className={styles.editModalOverlay}>
+          <div className={styles.editModal}>
+            <div className={styles.editModalHeader}>
+              <h3 className={styles.editModalTitle}>Cập nhật thông tin</h3>
+              <button className={styles.editModalClose} onClick={() => setShowEditModal(false)}>✕</button>
             </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={{ fontSize: 13, color: '#666' }}>Họ tên</label>
+            <div className={styles.editModalBody}>
+              <label className={styles.editModalLabel}>Họ tên</label>
               <input
+                className={styles.editModalInput}
                 value={editForm.fullName}
                 onChange={e => setEditForm(prev => ({ ...prev, fullName: e.target.value }))}
-                style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 15 }}
                 placeholder="Họ tên hiển thị"
               />
             </div>
-
-            
-
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-              <button onClick={() => setShowEditModal(false)}
-                style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid #ddd', background: '#fff', cursor: 'pointer', fontSize: 14 }}>
-                Hủy
-              </button>
-              <button onClick={handleSaveProfile} disabled={editSaving}
-                style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#0084ff', color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
+            <div className={styles.editModalActions}>
+              <button className={styles.editModalCancel} onClick={() => setShowEditModal(false)}>Hủy</button>
+              <button className={styles.editModalSave} onClick={handleSaveProfile} disabled={editSaving}>
                 {editSaving ? 'Đang lưu...' : 'Lưu'}
               </button>
             </div>
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
