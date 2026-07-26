@@ -173,10 +173,29 @@
   z-index: 0;
 }
 
+.callHidden {
+  display: none !important;
+}
+
 .callLocalVideo {
   position: absolute;
   width: 100px;
   height: 140px;
+  object-fit: cover;
+  border-radius: var(--apple-radius-sm);
+  right: 16px;
+  top: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  z-index: 2;
+  background: #000;
+  pointer-events: none;
+}
+
+
+.callLocalVideoConnected {
+  position: absolute;
+  width: 140px;
+  height: 180px;
   object-fit: cover;
   border-radius: var(--apple-radius-sm);
   right: 16px;
@@ -250,6 +269,22 @@
 .callEnd:hover { opacity: 0.85; }
 .callAnswer { background: #34c759; }
 .callAnswer:hover { opacity: 0.85; }
+.callAI { background: rgba(255,255,255,0.15); }
+.callAI:hover { opacity: 0.85; }
+.callAIActive { background: var(--apple-primary) !important; }
+
+.callAiText {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 8px 20px 16px;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--apple-body-on-dark);
+  font-family: var(--apple-font-display);
+  letter-spacing: -0.28px;
+  background-color: #9ca3af31;
+}
 
 /* Search Panel Styles */
 .searchPanel {
@@ -933,3 +968,4 @@
 .deleteBtn i {
   font-size: 16px;
 }
+

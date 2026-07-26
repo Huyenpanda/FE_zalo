@@ -1,6 +1,8 @@
 // ChatContext.js
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import socketService from '../socket';
+import aiSocket from '../aiSocket';
+import mediapipe from '../mediapipe';
 import api from '../api';
 
 const ChatContext = createContext();
@@ -472,10 +474,62 @@ const fetchConversations = useCallback(async (userId) => {
     });
   }, []);
 
+  // ============ AI RECOGNITION — phải khai báo trước endCall ============
+  const [aiText, setAiText] = useState('');
+  const [aiActive, setAiActive] = useState(false);
+  const predictionCounts = useRef({});
+  const aiSocketConnected = useRef(false);
+
+  const stopAI = useCallback(() => {
+    mediapipe.stop();
+    aiSocket.offPrediction();
+    setAiActive(false);
+    setAiText('');
+    predictionCounts.current = {};
+    aiSocketConnected.current = false;
+  }, []);
+
+  const startAI = useCallback(async () => {
+    aiSocket.connect();
+    aiSocketConnected.current = true;
+    if (!mediapipe.ready) {
+      const ok = await mediapipe.init();
+      if (!ok) { console.error('❌ MediaPipe init failed'); return; }
+    }
+    aiSocket.onPrediction((data) => {
+      if (data.text && data.text !== '?') {
+        const key = data.text.trim();
+        setAiText(prev => {
+          // Kiểm tra trùng trước khi log
+          const isDuplicate = prev && (prev.endsWith(key) || prev === key ||
+            prev.split(' ').pop() === key);
+          if (!isDuplicate) console.log('🔤 AI raw:', JSON.stringify(data));
+          if (isDuplicate) return prev;
+          if (!prev) return key;
+          return prev + ' ' + key;
+        });
+      }
+    });
+    mediapipe.onLandmarks = (landmarks) => {
+      // console.log('🗺️ landmarks:', landmarks.length, 'first:', landmarks[0], 'non-zero:', landmarks.filter(v => v !== 0).length);
+      if (aiSocketConnected.current) aiSocket.sendLandmarks(landmarks, currentUser?.id);
+    };
+    // Chọn nguồn video cho AI: chưa nghe → local (ký hiệu của mình), đã nghe → remote (ký hiệu đối phương)
+    const videoId = document.getElementById('localVideo');
+    // Dùng callStateRef thay vì callState để tránh stale closure
+    const video = callStateRef.current.status === 'connected'
+      ? (document.getElementById('remoteVideo') || videoId)
+      : videoId;
+    if (video) { mediapipe.start(video, 100); setAiActive(true); }
+  }, [currentUser]);
+
   const [callState, setCallState] = useState({
     active: false, type: null, status: '',
     remoteStream: null, remoteUser: null,
   });
+  const callStateRef = useRef(callState);
+  // Đồng bộ ref với state — ưu tiên dùng ref cho những nơi cần đọc giá trị mới trong closure
+  useEffect(() => { callStateRef.current = callState; }, [callState]);
 
   const endCall = useCallback(() => {
     if (window.__callEnding) return;
@@ -483,7 +537,7 @@ const fetchConversations = useCallback(async (userId) => {
     const remoteId = window.__callRemoteUserId;
     import('../../services/webrtc').then(mod => mod.default.endCall());
     if (remoteId) {
-      socketService.emitToPython('end_call', {
+      socketService.emit('end_call', {
         toUserId: remoteId,
         conversationId: selectedChatRef.current?.id,
         callerId: currentUser?.id,
@@ -491,6 +545,11 @@ const fetchConversations = useCallback(async (userId) => {
         status: 'ENDED',
       });
     }
+    // Dừng AI recognition hoàn toàn
+    stopAI();
+    console.log("🧹 Clearing AI text");
+    setAiText("");
+    predictionCounts.current = {};
     setCallState({ active: false, type: null, status: '', remoteStream: null, remoteUser: null });
     setTimeout(() => { window.__callEnding = false; }, 2000);
   }, []);
@@ -505,7 +564,12 @@ const fetchConversations = useCallback(async (userId) => {
 
   const handleCallAnswered = useCallback(async (data) => {
     console.log('📞 call_answered:', { hasAnswer: !!data.answer });
+    if (window.__callAnswered) return;
+    window.__callAnswered = true;
+    // Clear text từ giai đoạn chưa nghe máy
+    setAiText("");
     setCallState(prev => ({ ...prev, status: 'connected' }));
+    setTimeout(() => { window.__callAnswered = false; }, 3000);
     try { const w = (await import('../../services/webrtc')).default; if (data.answer) w.handleAnswer(data.answer); } catch (e) {}
   }, []);
 
@@ -518,8 +582,15 @@ const fetchConversations = useCallback(async (userId) => {
   }, []);
 
   const startCall = useCallback(async (targetUserId, isVideo = true) => {
-    console.log('📞 startCall to', targetUserId, 'pyConn:', socketService.socketPython?.connected);
+    // Reset aiText từ cuộc gọi trước nếu còn sót
+    setAiText("");
+    console.log("📞 startCall to", targetUserId);
     window.__callRemoteUserId = targetUserId;
+    // Render overlay TRƯỚC để DOM video tồn tại
+    setCallState({ active: true, type: isVideo ? 'video' : 'voice', status: 'calling', remoteStream: null, remoteUser: { id: targetUserId } });
+    await new Promise(r => setTimeout(r, 100)); // Đợi React render DOM
+    // Tự động bật AI nhận diện ký hiệu
+    startAI();
     try {
       const webrtc = (await import('../../services/webrtc')).default;
       webrtc.pc = null;
@@ -534,14 +605,14 @@ const fetchConversations = useCallback(async (userId) => {
         };
         tryAttach();
       };
-      const lv = window.__localVideo;
-      if (lv && webrtc.localStream) { lv.srcObject = webrtc.localStream; } else { var _lv = lv; setTimeout(function() { var lv2 = window.__localVideo; if (lv2 && webrtc.localStream) lv2.srcObject = webrtc.localStream; }, 500); }
+      // Gắn local video ngay (DOM đã render)
+      var lv = window.__localVideo;
+      if (lv && webrtc.localStream) { lv.srcObject = webrtc.localStream; console.log('✅ Local video attached'); }
       webrtc.onIceCandidate = (candidate) => {
-        socketService.emitToPython('ice_candidate', { toUserId: targetUserId, candidate: candidate.toJSON() });
+        socketService.emit('ice_candidate', { toUserId: targetUserId, candidate: candidate.toJSON() });
       };
-      setCallState({ active: true, type: isVideo ? 'video' : 'voice', status: 'calling', remoteStream: null, remoteUser: { id: targetUserId } });
       const offer = await webrtc.createOffer();
-      socketService.emitToPython('call_user', { toUserId: targetUserId, fromUserId: currentUser?.id, offer, isVideo });
+      socketService.emit('call_user', { toUserId: targetUserId, fromUserId: currentUser?.id, offer, isVideo });
     } catch (err) {
       console.error('call error:', err);
       setCallState({ active: false, type: null, status: '', remoteStream: null, remoteUser: null });
@@ -556,7 +627,12 @@ const fetchConversations = useCallback(async (userId) => {
       const webrtc = (await import('../../services/webrtc')).default;
       webrtc.pc = null;
       await webrtc.startLocalStream(callState.type === 'video');
-      webrtc.onCallConnected = () => setCallState(prev => ({ ...prev, status: 'connected' }));
+      // Tự động bật AI nhận diện ký hiệu
+      startAI();
+      webrtc.onCallConnected = () => {
+        setAiText("");
+        setCallState(prev => ({ ...prev, status: 'connected' }));
+      };
       webrtc.onCallEnded = () => endCall();
       webrtc.onRemoteStream = (stream) => {
         console.log('📹 Remote stream received');
@@ -570,15 +646,16 @@ const fetchConversations = useCallback(async (userId) => {
       const lv = window.__localVideo;
       if (lv && webrtc.localStream) { lv.srcObject = webrtc.localStream; } else { var _lv = lv; setTimeout(function() { var lv2 = window.__localVideo; if (lv2 && webrtc.localStream) lv2.srcObject = webrtc.localStream; }, 500); }
       webrtc.onIceCandidate = (candidate) => {
-        socketService.emitToPython('ice_candidate', { toUserId: fromUserId, candidate: candidate.toJSON() });
+        socketService.emit('ice_candidate', { toUserId: fromUserId, candidate: candidate.toJSON() });
       };
       if (window.__pendingIceCandidates) {
         for (const c of window.__pendingIceCandidates) await webrtc.addIceCandidate(c);
         window.__pendingIceCandidates = [];
       }
+      setAiText("");
       setCallState(prev => ({ ...prev, status: 'connected' }));
       const answer = await webrtc.handleOffer(offer);
-      socketService.emitToPython('answer_call', { toUserId: fromUserId, answer });
+      socketService.emit('answer_call', { toUserId: fromUserId, answer });
       window.__pendingCallOffer = null;
     } catch (err) { console.error('accept call error:', err); }
   }, [callState.type, endCall]);
@@ -589,15 +666,14 @@ const fetchConversations = useCallback(async (userId) => {
       socketService.connect();
 
       // Kết nối Python signaling cho WebRTC
-      socketService.connectPython();
 
       socketService.on('new_message', handleNewMessage);
 
       // WebRTC events qua Python socket
-      socketService.onPython('incoming_call', handleIncomingCall);
-      socketService.onPython('call_answered', handleCallAnswered);
-      socketService.onPython('call_ended', handleCallEnded);
-      socketService.onPython('ice_candidate', handleIceCandidate);
+      socketService.on('incoming_call', handleIncomingCall);
+      socketService.on('call_answered', handleCallAnswered);
+      socketService.on('call_ended', handleCallEnded);
+      socketService.on('ice_candidate', handleIceCandidate);
 
       socketService.on('user_status_changed', ({ userId: uid, isOnline }) => {
         setOnlineUsers(prev => { const s = new Set(prev); isOnline ? s.add(uid) : s.delete(uid); return s; });
@@ -630,6 +706,7 @@ const fetchConversations = useCallback(async (userId) => {
     selectChat, setSelectedChat: selectChat, fetchMessages, sendMessage,
     uploadFile, startTyping, stopTyping,
     isUserOnline: (uid) => onlineUsers.has(uid),
+    aiText, aiActive, startAI, stopAI,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

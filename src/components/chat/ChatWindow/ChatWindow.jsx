@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 const ChatWindow = ({ selectedChat, onBack }) => {
   const navigate = useNavigate();
-  const { messages, fetchMessages, currentUser, isInitializing, callState, startCall, acceptCall, endCall } = useChat();
+  const { messages, fetchMessages, currentUser, isInitializing, callState, startCall, acceptCall, endCall, aiText, aiActive, startAI, stopAI } = useChat();
 
   // Đọc thẳng từ localStorage để tránh stale state
   const currentUserId = React.useMemo(() => {
@@ -149,14 +149,36 @@ console.log('first message:', messages[0]);
 
       {callState.active && (
         <div className={styles.callOverlay}>
+          {/* Remote video — chỉ hiện video call && đã nghe máy thì fullscreen */}
           {callState.type === 'video' && (
-            <video id="remoteVideo" ref={el => { if (el) window.__remoteVideo = el; }} className={styles.callRemoteVideo} autoPlay playsInline />
+            <video
+              id="remoteVideo"
+              ref={el => { if (el) window.__remoteVideo = el; }}
+              className={`${styles.callRemoteVideo} ${callState.status === 'connected' ? '' : styles.callHidden}`}
+              autoPlay playsInline
+            />
           )}
-          <video id="localVideo" ref={el => { if (el) window.__localVideo = el; }} className={styles.callLocalVideo} autoPlay playsInline muted />
-          <div className={styles.callInfo}>
-            <h2 className={styles.callName}>{selectedChat?.name || 'Người gọi'}</h2>
-            <p className={styles.callStatus}>{callState.status === 'calling' ? 'Đang gọi...' : callState.status === 'ringing' ? 'Cuộc gọi đến...' : callState.status === 'connected' ? 'Đã kết nối' : ''}</p>
-          </div>
+          {/* Local video — fullscreen khi chưa nghe máy (hoặc voice call), PIP khi đã connected */}
+          <video
+            id="localVideo"
+            ref={el => { if (el) window.__localVideo = el; }}
+            className={callState.status === 'connected' && callState.type === 'video'
+              ? styles.callLocalVideoConnected
+              : styles.callRemoteVideo}
+            autoPlay playsInline
+            muted
+          />
+            {callState.status !== 'connected' && (
+            <div className={styles.callInfo}>
+              <h2 className={styles.callName}>{selectedChat?.name || 'Người gọi'}</h2>
+            <p className={styles.callStatus}>{callState.status === 'calling' ? 'Đang gọi...' : callState.status === 'ringing' ? 'Cuộc gọi đến...' : ''}</p>
+            </div>
+            )}
+            {aiText && (
+            <div className={styles.callAiText}>
+              🖐️ {aiText}
+            </div>
+          )}
           <div className={styles.callControls}>
             <span className={styles.callBadge}>{callState.type === 'video' ? 'Video' : 'Âm thanh'}</span>
             {callState.status === 'ringing' && (
@@ -167,7 +189,14 @@ console.log('first message:', messages[0]);
             <button className={`${styles.callButton} ${styles.callEnd}`} onClick={endCall}>
               <i className="fas fa-phone-slash"></i>
             </button>
+            
+            {/* Nút AI nhận diện ký hiệu — luôn hiện để bật/tắt bất kể đã nghe máy chưa */}
+            <button className={`${styles.callButton} ${styles.callAI} ${aiActive ? styles.callAIActive : ''}`} onClick={aiActive ? stopAI : startAI}
+              title={aiActive ? 'Tắt nhận diện' : 'Bật nhận diện ký hiệu'}>
+              <i className="fas fa-language"></i>
+            </button>
           </div>
+          
         </div>
       )}
 
