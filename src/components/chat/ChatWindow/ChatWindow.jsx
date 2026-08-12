@@ -17,6 +17,7 @@ const ChatWindow = ({ selectedChat, onBack }) => {
     acceptCall,
     endCall,
     aiText,
+    aiPreview,
     aiStatus,
     aiActive,
     startAI,
@@ -254,6 +255,15 @@ const ChatWindow = ({ selectedChat, onBack }) => {
                     <i className="fas fa-trash" />
                   </button>
                 </div>
+                {aiPreview && (
+                  <div className={styles.aiPrediction} aria-live="polite">
+                    <span className={styles.aiPredictionLabel}>Dự đoán</span>
+                    <strong className={styles.aiPredictionText}>{aiPreview.text}</strong>
+                    <span className={styles.aiPredictionConfidence}>
+                      {Math.round(aiPreview.confidence * 100)}%
+                    </span>
+                  </div>
+                )}
                 <div className={styles.aiRecognizedText}>
                   {aiText || 'Câu nhận diện sẽ hiển thị tại đây'}
                 </div>

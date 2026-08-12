@@ -9,13 +9,22 @@ function loadHolisticConstructor() {
   }
 
   return new Promise((resolve, reject) => {
+    const resolveConstructor = () => {
+      if (typeof window.Holistic === "function") {
+        resolve(window.Holistic);
+      } else {
+        reject(new TypeError("Holistic constructor is unavailable after script load"));
+      }
+    };
+
     const existingScript = document.getElementById(HOLISTIC_SCRIPT_ID);
     if (existingScript) {
       if (existingScript.dataset.loaded === "true")
-        return resolve(window.Holistic);
-      existingScript.addEventListener("load", () => resolve(window.Holistic));
+        return resolveConstructor();
+      existingScript.addEventListener("load", resolveConstructor, { once: true });
       existingScript.addEventListener("error", () =>
         reject(new Error("CDN fail")),
+        { once: true },
       );
       return;
     }
@@ -25,7 +34,7 @@ function loadHolisticConstructor() {
     script.crossOrigin = "anonymous";
     script.onload = () => {
       script.dataset.loaded = "true";
-      resolve(window.Holistic);
+      resolveConstructor();
     };
     script.onerror = () => reject(new Error("Failed to load"));
     document.body.appendChild(script);
@@ -35,6 +44,7 @@ function loadHolisticConstructor() {
 class MediaPipeService {
   constructor() {
     this.holistic = null;
+    this.initPromise = null;
     this.ready = false;
     this.video = null;
     this.canvas = null;
@@ -46,14 +56,23 @@ class MediaPipeService {
     this.processing = false;
   }
 
-  async init() {
+  init() {
+    if (this.ready && this.holistic) return Promise.resolve(true);
+    if (this.initPromise) return this.initPromise;
+
+    this.initPromise = this.initializeHolistic();
+    return this.initPromise;
+  }
+
+  async initializeHolistic() {
+    let holistic = null;
     try {
       const Holistic = await loadHolisticConstructor();
-      this.holistic = new Holistic({
+      holistic = new Holistic({
         locateFile: (file) => `${HOLISTIC_CDN}/${file}`,
       });
 
-      this.holistic.setOptions({
+      holistic.setOptions({
         modelComplexity: 1,
         smoothLandmarks: true,
         enableSegmentation: false,
@@ -61,11 +80,12 @@ class MediaPipeService {
         refineFaceLandmarks: false,
         minDetectionConfidence: 0.5,
         minTrackingConfidence: 0.5,
-        // 👇 TÍNH NĂNG QUAN TRỌNG NHẤT: Giả lập cv2.flip(frame, 1) y hệt như Python
-        selfieMode: true,
+        // Train and Python inference both process the original, unmirrored frame.
+        // The local preview may still be mirrored with CSS without changing landmarks.
+        selfieMode: false,
       });
 
-      this.holistic.onResults((results) => {
+      holistic.onResults((results) => {
         if (this.canvas && this.ctx) this.drawLandmarks(results);
 
         if (
@@ -79,14 +99,23 @@ class MediaPipeService {
         }
       });
 
+      await holistic.initialize();
+      this.holistic = holistic;
       this.ready = true;
-      console.log(
-        "✅ MediaPipe Holistic ready (Synchronized with Python cv2.flip)",
-      );
+      console.log("MediaPipe Holistic ready (unmirrored model input)");
       return true;
     } catch (err) {
       console.error("❌ MediaPipe init error:", err);
+      try {
+        await holistic?.close();
+      } catch (closeError) {
+        console.warn("MediaPipe cleanup failed:", closeError);
+      }
+      this.holistic = null;
+      this.ready = false;
       return false;
+    } finally {
+      this.initPromise = null;
     }
   }
 
@@ -114,7 +143,16 @@ class MediaPipeService {
     }
 
     // Tổng cộng đúng 225 giá trị (99 + 63 + 63)
-    return [...pose, ...leftHand, ...rightHand];
+    const keypoints = [...pose, ...leftHand, ...rightHand];
+    if (
+      keypoints.length !== SEQUENCE_FEATURES ||
+      !keypoints.every(Number.isFinite)
+    ) {
+      throw new Error(
+        `Invalid landmark payload: expected ${SEQUENCE_FEATURES} finite values`,
+      );
+    }
+    return keypoints;
   }
 
   drawLandmarks(results) {
@@ -200,7 +238,7 @@ class MediaPipeService {
     let lastVideoTime = -1;
     let lastProcessedAt = 0;
 
-    // Ép tốc độ 30 FPS khớp hoàn toàn với tốc độ thu thập lúc train (Inference.py)
+    // Limit processing cost; the model consumes frame order, not video timestamps.
     const targetFPS = 30;
     const frameInterval = 1000 / targetFPS;
 
@@ -249,4 +287,5 @@ class MediaPipeService {
   }
 }
 
-export default new MediaPipeService();
+const mediapipeService = new MediaPipeService();
+export default mediapipeService;

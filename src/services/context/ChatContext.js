@@ -6,6 +6,7 @@ import mediapipe from '../mediapipe';
 import api from '../api';
 
 const ChatContext = createContext();
+const AI_GESTURE_DELAY_MS = 2000;
 
 // ============================================================
 // MOCK DATA
@@ -476,21 +477,36 @@ const fetchConversations = useCallback(async (userId) => {
 
   // ============ AI RECOGNITION — phải khai báo trước endCall ============
   const [aiText, setAiText] = useState('');
+  const [aiPreview, setAiPreview] = useState(null);
   const [aiStatus, setAiStatus] = useState('Đang chờ ký hiệu...');
   const [aiActive, setAiActive] = useState(false);
   const aiSocketConnected = useRef(false);
+  const aiCooldownUntil = useRef(0);
+  const aiCooldownTimer = useRef(null);
 
   const stopAI = useCallback(() => {
+    if (aiCooldownTimer.current) {
+      clearTimeout(aiCooldownTimer.current);
+      aiCooldownTimer.current = null;
+    }
+    aiCooldownUntil.current = 0;
     mediapipe.stop();
     aiSocket.offPrediction();
     setAiActive(false);
     setAiText('');
+    setAiPreview(null);
     setAiStatus('Đang chờ ký hiệu...');
     aiSocketConnected.current = false;
   }, []);
 
   const clearAIText = useCallback(() => {
+    if (aiCooldownTimer.current) {
+      clearTimeout(aiCooldownTimer.current);
+      aiCooldownTimer.current = null;
+    }
+    aiCooldownUntil.current = 0;
     setAiText('');
+    setAiPreview(null);
     setAiStatus('Đang chờ ký hiệu...');
     aiSocket.clearRecognition();
   }, []);
@@ -519,20 +535,42 @@ const fetchConversations = useCallback(async (userId) => {
     }
     aiSocket.offPrediction();
     aiSocket.onPrediction((data) => {
+      if (Date.now() < aiCooldownUntil.current) return;
+
       if (data.state === 'recognized' && data.text?.trim()) {
         const word = data.text.trim();
+        setAiPreview(null);
         setAiText(prev => prev ? `${prev} ${word}` : word);
-        setAiStatus('Đã nhận diện');
+        aiCooldownUntil.current = Date.now() + AI_GESTURE_DELAY_MS;
+        aiSocket.clearRecognition();
+        setAiStatus(`Đã nhận diện "${word}". Chờ ${AI_GESTURE_DELAY_MS / 1000} giây...`);
+
+        if (aiCooldownTimer.current) clearTimeout(aiCooldownTimer.current);
+        aiCooldownTimer.current = setTimeout(() => {
+          aiCooldownUntil.current = 0;
+          aiCooldownTimer.current = null;
+          setAiStatus('Đang chờ ký hiệu tiếp theo...');
+        }, AI_GESTURE_DELAY_MS);
         return;
       }
       if (data.state === 'collecting') {
+        setAiPreview(null);
         const percent = Math.round((data.progress || 0) * 100);
         setAiStatus(`Đang nhận diện... ${percent}%`);
       } else if (data.state === 'confirming') {
+        const predictedSign = data.text?.trim();
+        setAiPreview(predictedSign ? {
+          text: predictedSign,
+          confidence: Number(data.confidence) || 0,
+          confirmations: Number(data.confirmations) || 0,
+          requiredConfirmations: Number(data.requiredConfirmations) || 0,
+        } : null);
         setAiStatus('Đang xác nhận ký hiệu...');
       } else if (data.state === 'uncertain') {
+        setAiPreview(null);
         setAiStatus('Chưa nhận diện rõ');
       } else if (data.state === 'waiting') {
+        setAiPreview(null);
         setAiStatus('Đang chờ ký hiệu...');
       } else if (data.state === 'error') {
         console.warn('AI payload error:', data.error);
@@ -540,7 +578,12 @@ const fetchConversations = useCallback(async (userId) => {
     });
     mediapipe.onLandmarks = (landmarks) => {
       // console.log('🗺️ landmarks:', landmarks.length, 'first:', landmarks[0], 'non-zero:', landmarks.filter(v => v !== 0).length);
-      if (aiSocketConnected.current) aiSocket.sendLandmarks(landmarks, currentUser?.id);
+      if (
+        aiSocketConnected.current &&
+        Date.now() >= aiCooldownUntil.current
+      ) {
+        aiSocket.sendLandmarks(landmarks, currentUser?.id);
+      }
     };
     // Chọn nguồn video cho AI: chưa nghe → local (ký hiệu của mình), đã nghe → remote (ký hiệu đối phương)
     const localVideo = document.getElementById('localVideo');
@@ -606,6 +649,7 @@ const fetchConversations = useCallback(async (userId) => {
     stopAI();
     console.log("🧹 Clearing AI text");
     setAiText("");
+    setAiPreview(null);
     setCallState({ active: false, type: null, status: '', remoteStream: null, remoteUser: null });
     setTimeout(() => { window.__callEnding = false; }, 2000);
   }, []);
@@ -624,6 +668,7 @@ const fetchConversations = useCallback(async (userId) => {
     window.__callAnswered = true;
     // Clear text từ giai đoạn chưa nghe máy
     setAiText("");
+    setAiPreview(null);
     setCallState(prev => ({ ...prev, status: 'connected' }));
     setTimeout(() => { window.__callAnswered = false; }, 3000);
     try { const w = (await import('../../services/webrtc')).default; if (data.answer) w.handleAnswer(data.answer); } catch (e) {}
@@ -640,6 +685,7 @@ const fetchConversations = useCallback(async (userId) => {
   const startCall = useCallback(async (targetUserId, isVideo = true) => {
     // Reset aiText từ cuộc gọi trước nếu còn sót
     setAiText("");
+    setAiPreview(null);
     console.log("📞 startCall to", targetUserId);
     window.__callRemoteUserId = targetUserId;
     // Render overlay TRƯỚC để DOM video tồn tại
@@ -679,6 +725,7 @@ const fetchConversations = useCallback(async (userId) => {
       await webrtc.startLocalStream(callState.type === 'video');
       webrtc.onCallConnected = () => {
         setAiText("");
+        setAiPreview(null);
         setCallState(prev => ({ ...prev, status: 'connected' }));
       };
       webrtc.onCallEnded = () => endCall();
@@ -697,6 +744,7 @@ const fetchConversations = useCallback(async (userId) => {
         window.__pendingIceCandidates = [];
       }
       setAiText("");
+      setAiPreview(null);
       setCallState(prev => ({ ...prev, status: 'connected' }));
       const answer = await webrtc.handleOffer(offer);
       socketService.emit('answer_call', { toUserId: fromUserId, answer });
@@ -750,7 +798,7 @@ const fetchConversations = useCallback(async (userId) => {
     selectChat, setSelectedChat: selectChat, fetchMessages, sendMessage,
     uploadFile, startTyping, stopTyping,
     isUserOnline: (uid) => onlineUsers.has(uid),
-    aiText, aiStatus, aiActive, startAI, stopAI, clearAIText,
+    aiText, aiPreview, aiStatus, aiActive, startAI, stopAI, clearAIText,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

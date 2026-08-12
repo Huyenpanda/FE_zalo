@@ -457,6 +457,34 @@
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
 }
 
+.aiPrediction {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-height: 34px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  border-left: 3px solid #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  text-align: left;
+}
+
+.aiPredictionLabel,
+.aiPredictionConfidence {
+  color: #fcd34d;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.aiPredictionText {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: #fff;
+  font-size: 17px;
+  letter-spacing: 0;
+}
+
 .aiRecognizedText {
   min-height: 28px;
   font-size: 20px;
