@@ -1,32 +1,47 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import styles from './ChatWindow.module.css';
-import MessageBubble from '../MessageBubble/MessageBubble';
-import InputBox from '../InputBox/InputBox';
-import { useChat } from '../../../services/context/ChatContext';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from "react";
+import styles from "./ChatWindow.module.css";
+import MessageBubble from "../MessageBubble/MessageBubble";
+import InputBox from "../InputBox/InputBox";
+import { useChat } from "../../../services/context/ChatContext";
+import { useNavigate } from "react-router-dom";
 
 const ChatWindow = ({ selectedChat, onBack }) => {
   const navigate = useNavigate();
-  const { messages, fetchMessages, currentUser, isInitializing, callState, startCall, acceptCall, endCall, aiText, aiActive, startAI, stopAI } = useChat();
+  const {
+    messages,
+    fetchMessages,
+    currentUser,
+    isInitializing,
+    callState,
+    startCall,
+    acceptCall,
+    endCall,
+    aiText,
+    aiStatus,
+    aiActive,
+    startAI,
+    stopAI,
+    clearAIText,
+  } = useChat();
 
   // Đọc thẳng từ localStorage để tránh stale state
   const currentUserId = React.useMemo(() => {
     try {
-      const u = JSON.parse(localStorage.getItem('user') || '{}');
-      return String(u.id || u._id || currentUser?.id || '');
+      const u = JSON.parse(localStorage.getItem("user") || "{}");
+      return String(u.id || u._id || currentUser?.id || "");
     } catch {
-      return String(currentUser?.id || '');
+      return String(currentUser?.id || "");
     }
   }, []); // [] vì user không đổi trong session
 
   const [showInfo, setShowInfo] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [expandedSections, setExpandedSections] = useState({
     photos: true,
     files: true,
     links: true,
-    security: false
+    security: false,
   });
   const messagesEndRef = React.useRef(null);
 
@@ -39,35 +54,43 @@ const ChatWindow = ({ selectedChat, onBack }) => {
     return [...messages].sort((a, b) => getTime(a) - getTime(b));
   }, [messages]);
 
-  const filteredMessages = sortedMessages.filter(msg => {
+  const filteredMessages = sortedMessages.filter((msg) => {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase();
-    return msg.content?.toLowerCase().includes(query) || 
-           msg.sender?.name?.toLowerCase().includes(query);
+    return (
+      msg.content?.toLowerCase().includes(query) ||
+      msg.sender?.name?.toLowerCase().includes(query)
+    );
   });
 
   // ChatWindow.jsx - bỏ filter conversationId, dùng thẳng sortedMessages
-const currentChatMessages = useMemo(() => {
-  if (!selectedChat) return [];
-  // Bỏ filter vì messages trong context luôn là của selectedChat hiện tại
-  return sortedMessages;
-}, [sortedMessages, selectedChat]);
+  const currentChatMessages = useMemo(() => {
+    if (!selectedChat) return [];
+    // Bỏ filter vì messages trong context luôn là của selectedChat hiện tại
+    return sortedMessages;
+  }, [sortedMessages, selectedChat]);
 
   // ChatWindow.jsx - thêm ngay trước return
-  console.log('selectedChat.id:', selectedChat?.id, typeof selectedChat?.id);
-  console.log('messages:', messages.map(m => ({ convId: m.conversationId, type: typeof m.conversationId })));
-  console.log('currentChatMessages length:', currentChatMessages.length);
+  console.log("selectedChat.id:", selectedChat?.id, typeof selectedChat?.id);
+  console.log(
+    "messages:",
+    messages.map((m) => ({
+      convId: m.conversationId,
+      type: typeof m.conversationId,
+    })),
+  );
+  console.log("currentChatMessages length:", currentChatMessages.length);
   // scroll to bottom when messages update
   useEffect(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
 
   const toggleSection = (section) => {
-    setExpandedSections(prev => ({
+    setExpandedSections((prev) => ({
       ...prev,
-      [section]: !prev[section]
+      [section]: !prev[section],
     }));
   };
 
@@ -75,32 +98,32 @@ const currentChatMessages = useMemo(() => {
   const links = [
     {
       id: 1,
-      title: 'BBC Learning English - Learn English wi...',
-      url: 'www.bbc.co.uk',
-      image: 'https://ui-avatars.com/api/?name=BBC&background=0084ff&color=fff',
-      date: '07/06'
+      title: "BBC Learning English - Learn English wi...",
+      url: "www.bbc.co.uk",
+      image: "https://ui-avatars.com/api/?name=BBC&background=0084ff&color=fff",
+      date: "07/06",
     },
     {
       id: 2,
-      title: 'Danh sách sinh viên D17CNPM6 tham ...',
-      url: 'docs.google.com',
-      icon: 'fas fa-link',
-      date: '06/06'
+      title: "Danh sách sinh viên D17CNPM6 tham ...",
+      url: "docs.google.com",
+      icon: "fas fa-link",
+      date: "06/06",
     },
     {
       id: 3,
-      title: 'Minh chứng hoạt động - Google Drive',
-      url: 'drive.google.com',
-      icon: 'fas fa-link',
-      date: '06/06'
-    }
+      title: "Minh chứng hoạt động - Google Drive",
+      url: "drive.google.com",
+      icon: "fas fa-link",
+      date: "06/06",
+    },
   ];
-console.log('=== ChatWindow render ===');
-console.log('messages count:', messages.length);
-console.log('sortedMessages count:', sortedMessages.length);  
-console.log('currentChatMessages count:', currentChatMessages.length);
-console.log('currentUser:', currentUser?.id);
-console.log('first message:', messages[0]);
+  console.log("=== ChatWindow render ===");
+  console.log("messages count:", messages.length);
+  console.log("sortedMessages count:", sortedMessages.length);
+  console.log("currentChatMessages count:", currentChatMessages.length);
+  console.log("currentUser:", currentUser?.id);
+  console.log("first message:", messages[0]);
   return (
     <div className={styles.chatWindow}>
       {/* Header — Apple style black on mobile */}
@@ -117,28 +140,44 @@ console.log('first message:', messages[0]);
                   navigate(`/profile/${selectedChat.userId}`);
                 }
               }}
-              style={{ cursor: selectedChat?.userId ? 'pointer' : 'default' }}
-              alt={selectedChat?.name || 'Avatar'}
+              style={{ cursor: selectedChat?.userId ? "pointer" : "default" }}
+              alt={selectedChat?.name || "Avatar"}
             />
-            {selectedChat?.online && <div className={styles.onlineStatus}></div>}
+            {selectedChat?.online && (
+              <div className={styles.onlineStatus}></div>
+            )}
           </div>
           <div className={styles.userDetails}>
             <h3>{selectedChat?.name}</h3>
-            {selectedChat?.online && <span className={styles.status}>Đang hoạt động</span>}
+            {selectedChat?.online && (
+              <span className={styles.status}>Đang hoạt động</span>
+            )}
           </div>
         </div>
 
         <div className={styles.headerActions}>
-          <button 
+          <button
             className={styles.actionBtn}
             onClick={() => setShowSearch(!showSearch)}
             title="Tìm kiếm"
           >
             <i className="fas fa-search"></i>
           </button>
-          <button className={styles.actionBtn} onClick={() => startCall(selectedChat?.userId, false)} title="Gọi thoại"><i className="fas fa-phone"></i></button>
-          <button className={styles.actionBtn} onClick={() => startCall(selectedChat?.userId, true)} title="Gọi video"><i className="fas fa-video"></i></button>
-          <button 
+          <button
+            className={styles.actionBtn}
+            onClick={() => startCall(selectedChat?.userId, false)}
+            title="Gọi thoại"
+          >
+            <i className="fas fa-phone"></i>
+          </button>
+          <button
+            className={styles.actionBtn}
+            onClick={() => startCall(selectedChat?.userId, true)}
+            title="Gọi video"
+          >
+            <i className="fas fa-video"></i>
+          </button>
+          <button
             className={styles.actionBtn}
             onClick={() => setShowInfo(!showInfo)}
           >
@@ -149,57 +188,110 @@ console.log('first message:', messages[0]);
 
       {callState.active && (
         <div className={styles.callOverlay}>
-          {/* Remote video — chỉ hiện video call && đã nghe máy thì fullscreen */}
-          {callState.type === 'video' && (
+          {/* 1. Remote video — Màn hình của người đối diện (KHÔNG LẬT, CÂN BẰNG KHUNG HÌNH) */}
+          {callState.type === "video" && (
             <video
               id="remoteVideo"
-              ref={el => { if (el) window.__remoteVideo = el; }}
-              className={`${styles.callRemoteVideo} ${callState.status === 'connected' ? '' : styles.callHidden}`}
-              autoPlay playsInline
+              ref={(el) => {
+                if (el) window.__remoteVideo = el;
+              }}
+              className={`${styles.callRemoteVideo} ${
+                callState.status === "connected" ? "" : styles.callHidden
+              }`}
+              autoPlay
+              playsInline
             />
           )}
-          {/* Local video — fullscreen khi chưa nghe máy (hoặc voice call), PIP khi đã connected */}
+
+          {/* 2. Local video — Camera của bạn (LUÔN LẬT GƯƠNG & THU NHỎ KHI CONNECTED) */}
           <video
             id="localVideo"
-            ref={el => { if (el) window.__localVideo = el; }}
-            className={callState.status === 'connected' && callState.type === 'video'
-              ? styles.callLocalVideoConnected
-              : styles.callRemoteVideo}
-            autoPlay playsInline
+            ref={(el) => {
+              if (el) window.__localVideo = el;
+            }}
+            className={
+              callState.status === "connected" && callState.type === "video"
+                ? styles.callLocalVideoConnected /* Đã nghe máy: Thu nhỏ ở góc + Lật gương */
+                : styles.callLocalVideoFull /* Chưa nghe máy: Vừa vặn màn hình + Lật gương */
+            }
+            autoPlay
+            playsInline
             muted
           />
-            {callState.status !== 'connected' && (
+
+          {/* Thông tin cuộc gọi khi chưa nhấc máy */}
+          {callState.status !== "connected" && (
             <div className={styles.callInfo}>
-              <h2 className={styles.callName}>{selectedChat?.name || 'Người gọi'}</h2>
-            <p className={styles.callStatus}>{callState.status === 'calling' ? 'Đang gọi...' : callState.status === 'ringing' ? 'Cuộc gọi đến...' : ''}</p>
-            </div>
-            )}
-            {aiText && (
-            <div className={styles.callAiText}>
-              🖐️ {aiText}
+              <h2 className={styles.callName}>
+                {selectedChat?.name || "Người gọi"}
+              </h2>
+              <p className={styles.callStatus}>
+                {callState.status === "calling"
+                  ? "Đang gọi..."
+                  : callState.status === "ringing"
+                    ? "Cuộc gọi đến..."
+                    : ""}
+              </p>
             </div>
           )}
+
+          {(aiActive || aiText) && (
+            <div className={styles.aiOverlay}>
+              <div className={styles.aiCard}>
+                <div className={styles.aiCardHeader}>
+                  <div className={styles.aiStatus} role="status">
+                    <span className={styles.aiStatusDot} />
+                    {aiStatus}
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.aiClearButton}
+                    onClick={clearAIText}
+                    title="Xóa câu đã nhận diện"
+                    aria-label="Xóa câu đã nhận diện"
+                    disabled={!aiText}
+                  >
+                    <i className="fas fa-trash" />
+                  </button>
+                </div>
+                <div className={styles.aiRecognizedText}>
+                  {aiText || 'Câu nhận diện sẽ hiển thị tại đây'}
+                </div>
+              </div>
+            </div>
+          )}
+          {/* Thanh điều khiển */}
           <div className={styles.callControls}>
-            <span className={styles.callBadge}>{callState.type === 'video' ? 'Video' : 'Âm thanh'}</span>
-            {callState.status === 'ringing' && (
-              <button className={`${styles.callButton} ${styles.callAnswer}`} onClick={acceptCall}>
+            <span className={styles.callBadge}>
+              {callState.type === "video" ? "Video" : "Âm thanh"}
+            </span>
+            {callState.status === "ringing" && (
+              <button
+                className={`${styles.callButton} ${styles.callAnswer}`}
+                onClick={acceptCall}
+              >
                 <i className="fas fa-phone"></i>
               </button>
             )}
-            <button className={`${styles.callButton} ${styles.callEnd}`} onClick={endCall}>
+            <button
+              className={`${styles.callButton} ${styles.callEnd}`}
+              onClick={endCall}
+            >
               <i className="fas fa-phone-slash"></i>
             </button>
-            
-            {/* Nút AI nhận diện ký hiệu — luôn hiện để bật/tắt bất kể đã nghe máy chưa */}
-            <button className={`${styles.callButton} ${styles.callAI} ${aiActive ? styles.callAIActive : ''}`} onClick={aiActive ? stopAI : startAI}
-              title={aiActive ? 'Tắt nhận diện' : 'Bật nhận diện ký hiệu'}>
+
+            <button
+              className={`${styles.callButton} ${styles.callAI} ${
+                aiActive ? styles.callAIActive : ""
+              }`}
+              onClick={aiActive ? stopAI : startAI}
+              title={aiActive ? "Tắt nhận diện" : "Bật nhận diện ký hiệu"}
+            >
               <i className="fas fa-language"></i>
             </button>
           </div>
-          
         </div>
       )}
-
       {showSearch && (
         <div className={styles.searchPanel}>
           <div className={styles.searchHeader}>
@@ -214,9 +306,9 @@ console.log('first message:', messages[0]);
                 className={styles.searchInput}
               />
               {searchQuery && (
-                <button 
+                <button
                   className={styles.clearBtn}
-                  onClick={() => setSearchQuery('')}
+                  onClick={() => setSearchQuery("")}
                 >
                   <i className="fas fa-times"></i>
                 </button>
@@ -224,7 +316,10 @@ console.log('first message:', messages[0]);
             </div>
             <button
               className={styles.closeSearchBtn}
-              onClick={() => { setShowSearch(false); setSearchQuery(''); }}
+              onClick={() => {
+                setShowSearch(false);
+                setSearchQuery("");
+              }}
             >
               <i className="fas fa-times"></i>
             </button>
@@ -233,12 +328,13 @@ console.log('first message:', messages[0]);
             {searchQuery.trim() ? (
               filteredMessages.length > 0 ? (
                 <div className={styles.resultsList}>
-                  <p className={styles.resultCount}>Tìm thấy {filteredMessages.length} kết quả</p>
+                  <p className={styles.resultCount}>
+                    Tìm thấy {filteredMessages.length} kết quả
+                  </p>
                   {filteredMessages.map((message) => (
                     <div key={message.id} className={styles.searchResultItem}>
                       <MessageBubble message={message} />
                     </div>
-                    
                   ))}
                 </div>
               ) : (
@@ -260,22 +356,23 @@ console.log('first message:', messages[0]);
 
       {/* Messages Area */}
       <div className={styles.messagesContainer}>
-        <div className={styles.messagesList} key={currentUser?.id || 'loading'}>
-          {
-            selectedChat ? (
-              currentChatMessages.map((message) => (
-                <MessageBubble
-                  key={message._id || message.id}
-                  message={message}
-                  currentUserId={currentUserId}
-                />
-              ))
-            ) : (
-              <div className={styles.emptyChatPlaceholder}>
-                <p>Chưa có cuộc trò chuyện được chọn. Vui lòng chọn một cuộc trò chuyện ở cột bên trái.</p>
-              </div>
-            )
-          }
+        <div className={styles.messagesList} key={currentUser?.id || "loading"}>
+          {selectedChat ? (
+            currentChatMessages.map((message) => (
+              <MessageBubble
+                key={message._id || message.id}
+                message={message}
+                currentUserId={currentUserId}
+              />
+            ))
+          ) : (
+            <div className={styles.emptyChatPlaceholder}>
+              <p>
+                Chưa có cuộc trò chuyện được chọn. Vui lòng chọn một cuộc trò
+                chuyện ở cột bên trái.
+              </p>
+            </div>
+          )}
           <div ref={messagesEndRef}></div>
         </div>
       </div>
@@ -288,7 +385,7 @@ console.log('first message:', messages[0]);
         <div className={styles.infoPanel}>
           <div className={styles.infoPanelHeader}>
             <h3>Thông tin hội thoại</h3>
-            <button 
+            <button
               className={styles.closeBtn}
               onClick={() => setShowInfo(false)}
             >
@@ -342,12 +439,14 @@ console.log('first message:', messages[0]);
 
             {/* Photos/Videos Section */}
             <div className={styles.infoSection}>
-              <button 
+              <button
                 className={styles.collapsibleHeader}
-                onClick={() => toggleSection('photos')}
+                onClick={() => toggleSection("photos")}
               >
                 <span>Ảnh/Video</span>
-                <i className={`fas fa-chevron-down ${expandedSections.photos ? styles.expanded : ''}`}></i>
+                <i
+                  className={`fas fa-chevron-down ${expandedSections.photos ? styles.expanded : ""}`}
+                ></i>
               </button>
               {expandedSections.photos && (
                 <div className={styles.collapsibleContent}>
@@ -369,36 +468,46 @@ console.log('first message:', messages[0]);
 
             {/* Files Section */}
             <div className={styles.infoSection}>
-              <button 
+              <button
                 className={styles.collapsibleHeader}
-                onClick={() => toggleSection('files')}
+                onClick={() => toggleSection("files")}
               >
                 <span>File</span>
-                <i className={`fas fa-chevron-down ${expandedSections.files ? styles.expanded : ''}`}></i>
+                <i
+                  className={`fas fa-chevron-down ${expandedSections.files ? styles.expanded : ""}`}
+                ></i>
               </button>
               {expandedSections.files && (
                 <div className={styles.collapsibleContent}>
-                  <p className={styles.emptyText}>Chưa có File được chia sẻ trong hội thoại này</p>
+                  <p className={styles.emptyText}>
+                    Chưa có File được chia sẻ trong hội thoại này
+                  </p>
                 </div>
               )}
             </div>
 
             {/* Links Section */}
             <div className={styles.infoSection}>
-              <button 
+              <button
                 className={styles.collapsibleHeader}
-                onClick={() => toggleSection('links')}
+                onClick={() => toggleSection("links")}
               >
                 <span>Link</span>
-                <i className={`fas fa-chevron-down ${expandedSections.links ? styles.expanded : ''}`}></i>
+                <i
+                  className={`fas fa-chevron-down ${expandedSections.links ? styles.expanded : ""}`}
+                ></i>
               </button>
               {expandedSections.links && (
                 <div className={styles.collapsibleContent}>
                   <div className={styles.linksList}>
-                    {links.map(link => (
+                    {links.map((link) => (
                       <a key={link.id} href="#" className={styles.linkItem}>
                         {link.image && (
-                          <img src={link.image} alt={link.title} className={styles.linkImage} />
+                          <img
+                            src={link.image}
+                            alt={link.title}
+                            className={styles.linkImage}
+                          />
                         )}
                         {link.icon && (
                           <div className={styles.linkIcon}>
@@ -420,20 +529,26 @@ console.log('first message:', messages[0]);
 
             {/* Security Settings Section */}
             <div className={styles.infoSection}>
-              <button 
+              <button
                 className={styles.collapsibleHeader}
-                onClick={() => toggleSection('security')}
+                onClick={() => toggleSection("security")}
               >
                 <span>Thiết lập bảo mật</span>
-                <i className={`fas fa-chevron-down ${expandedSections.security ? styles.expanded : ''}`}></i>
+                <i
+                  className={`fas fa-chevron-down ${expandedSections.security ? styles.expanded : ""}`}
+                ></i>
               </button>
               {expandedSections.security && (
                 <div className={styles.collapsibleContent}>
                   <div className={styles.securityItem}>
                     <i className="fas fa-info-circle"></i>
                     <div className={styles.securityItemContent}>
-                      <span className={styles.securityLabel}>Tin nhắn tự xoá 🔒</span>
-                      <span className={styles.securityValue}>Không bao giờ</span>
+                      <span className={styles.securityLabel}>
+                        Tin nhắn tự xoá 🔒
+                      </span>
+                      <span className={styles.securityValue}>
+                        Không bao giờ
+                      </span>
                     </div>
                   </div>
 

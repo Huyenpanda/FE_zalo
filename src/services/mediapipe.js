@@ -1,69 +1,252 @@
-// MediaPipe Service — dùng @mediapipe/tasks-vision PoseLandmarker
+const HOLISTIC_VERSION = "0.5.1675471629";
+const SEQUENCE_FEATURES = 225;
+const HOLISTIC_CDN = `https://cdn.jsdelivr.net/npm/@mediapipe/holistic@${HOLISTIC_VERSION}`;
+const HOLISTIC_SCRIPT_ID = "mediapipe-holistic-script";
+
+function loadHolisticConstructor() {
+  if (typeof window.Holistic === "function") {
+    return Promise.resolve(window.Holistic);
+  }
+
+  return new Promise((resolve, reject) => {
+    const existingScript = document.getElementById(HOLISTIC_SCRIPT_ID);
+    if (existingScript) {
+      if (existingScript.dataset.loaded === "true")
+        return resolve(window.Holistic);
+      existingScript.addEventListener("load", () => resolve(window.Holistic));
+      existingScript.addEventListener("error", () =>
+        reject(new Error("CDN fail")),
+      );
+      return;
+    }
+    const script = document.createElement("script");
+    script.id = HOLISTIC_SCRIPT_ID;
+    script.src = `${HOLISTIC_CDN}/holistic.js`;
+    script.crossOrigin = "anonymous";
+    script.onload = () => {
+      script.dataset.loaded = "true";
+      resolve(window.Holistic);
+    };
+    script.onerror = () => reject(new Error("Failed to load"));
+    document.body.appendChild(script);
+  });
+}
 
 class MediaPipeService {
   constructor() {
     this.holistic = null;
     this.ready = false;
     this.video = null;
+    this.canvas = null;
+    this.ctx = null;
     this.running = false;
     this.onLandmarks = null;
     this.animFrameId = null;
+    this.runId = 0;
+    this.processing = false;
   }
 
   async init() {
     try {
-      const vision = await import('@mediapipe/tasks-vision');
-      const wasmFileset = await vision.FilesetResolver.forVisionTasks(
-        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
-      );
-      this.holistic = await vision.PoseLandmarker.createFromOptions(wasmFileset, {
-        baseOptions: {
-          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task',
-          delegate: 'GPU',
-        },
-        runningMode: 'VIDEO',
-        minPoseDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.5,
+      const Holistic = await loadHolisticConstructor();
+      this.holistic = new Holistic({
+        locateFile: (file) => `${HOLISTIC_CDN}/${file}`,
       });
+
+      this.holistic.setOptions({
+        modelComplexity: 1,
+        smoothLandmarks: true,
+        enableSegmentation: false,
+        smoothSegmentation: false,
+        refineFaceLandmarks: false,
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5,
+        // 👇 TÍNH NĂNG QUAN TRỌNG NHẤT: Giả lập cv2.flip(frame, 1) y hệt như Python
+        selfieMode: true,
+      });
+
+      this.holistic.onResults((results) => {
+        if (this.canvas && this.ctx) this.drawLandmarks(results);
+
+        if (
+          this.onLandmarks &&
+          (results.poseLandmarks ||
+            results.leftHandLandmarks ||
+            results.rightHandLandmarks)
+        ) {
+          const landmarks225 = this.extractKeypoints(results);
+          this.onLandmarks(landmarks225);
+        }
+      });
+
       this.ready = true;
-      console.log('✅ MediaPipe PoseLandmarker ready');
+      console.log(
+        "✅ MediaPipe Holistic ready (Synchronized with Python cv2.flip)",
+      );
       return true;
     } catch (err) {
-      console.error('❌ MediaPipe init error:', err);
+      console.error("❌ MediaPipe init error:", err);
       return false;
     }
   }
 
-  extractKeypoints(result) {
-    const poseLandmarks = result.landmarks?.[0] || [];
-    const pose = poseLandmarks.map(lm => [lm.x, lm.y, lm.z]).flat();
-    return [...pose, ...new Array(225 - pose.length).fill(0)].slice(0, 225);
+  extractKeypoints(results) {
+    // 1. Pose (33 điểm * 3 = 99 số) - Ép chặt chỉ lấy x, y, z
+    let pose = new Array(99).fill(0);
+    if (results.poseLandmarks) {
+      pose = results.poseLandmarks.map((lm) => [lm.x, lm.y, lm.z]).flat();
+    }
+
+    // 2. Tay Trái (21 điểm * 3 = 63 số)
+    let leftHand = new Array(63).fill(0);
+    if (results.leftHandLandmarks) {
+      leftHand = results.leftHandLandmarks
+        .map((lm) => [lm.x, lm.y, lm.z])
+        .flat();
+    }
+
+    // 3. Tay Phải (21 điểm * 3 = 63 số)
+    let rightHand = new Array(63).fill(0);
+    if (results.rightHandLandmarks) {
+      rightHand = results.rightHandLandmarks
+        .map((lm) => [lm.x, lm.y, lm.z])
+        .flat();
+    }
+
+    // Tổng cộng đúng 225 giá trị (99 + 63 + 63)
+    return [...pose, ...leftHand, ...rightHand];
   }
 
-  start(videoElement, intervalMs = 100) {
-    if (!this.ready || !videoElement) return;
-    this.video = videoElement;
+  drawLandmarks(results) {
+    if (!this.canvas || !this.ctx || !this.video) return;
+
+    if (
+      this.canvas.width !== this.video.videoWidth ||
+      this.canvas.height !== this.video.videoHeight
+    ) {
+      this.canvas.width = this.video.videoWidth || 640;
+      this.canvas.height = this.video.videoHeight || 480;
+    }
+
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+    if (results.poseLandmarks) {
+      this.ctx.fillStyle = "#00FF00";
+      for (const lm of results.poseLandmarks) {
+        this.ctx.beginPath();
+        this.ctx.arc(
+          lm.x * this.canvas.width,
+          lm.y * this.canvas.height,
+          3,
+          0,
+          2 * Math.PI,
+        );
+        this.ctx.fill();
+      }
+    }
+
+    this.ctx.fillStyle = "#00FFFF";
+    this.ctx.strokeStyle = "#000000";
+    this.ctx.lineWidth = 1;
+
+    if (results.leftHandLandmarks) {
+      for (const lm of results.leftHandLandmarks) {
+        this.ctx.beginPath();
+        this.ctx.arc(
+          lm.x * this.canvas.width,
+          lm.y * this.canvas.height,
+          5,
+          0,
+          2 * Math.PI,
+        );
+        this.ctx.fill();
+        this.ctx.stroke();
+      }
+    }
+    if (results.rightHandLandmarks) {
+      for (const lm of results.rightHandLandmarks) {
+        this.ctx.beginPath();
+        this.ctx.arc(
+          lm.x * this.canvas.width,
+          lm.y * this.canvas.height,
+          5,
+          0,
+          2 * Math.PI,
+        );
+        this.ctx.fill();
+        this.ctx.stroke();
+      }
+    }
+  }
+
+  start(videoElement, canvasElement) {
+    if (!this.ready) return false;
+
+    this.video = videoElement?.current ? videoElement.current : videoElement;
+    const rawCanvas = canvasElement?.current
+      ? canvasElement.current
+      : canvasElement;
+
+    if (rawCanvas && typeof rawCanvas.getContext === "function") {
+      this.canvas = rawCanvas;
+      this.ctx = this.canvas.getContext("2d");
+    }
+
+    if (!this.video) return false;
+
     this.running = true;
-    let lastTime = -1;
-    const loop = () => {
-      if (!this.running) return;
-      if (this.video.readyState >= 2 && this.video.currentTime !== lastTime) {
-        lastTime = this.video.currentTime;
-        const result = this.holistic.detectForVideo(this.video, performance.now());
-        if (result.landmarks?.length > 0 && this.onLandmarks) {
-          this.onLandmarks(this.extractKeypoints(result));
+    this.runId++;
+    const currentRunId = this.runId;
+    let lastVideoTime = -1;
+    let lastProcessedAt = 0;
+
+    // Ép tốc độ 30 FPS khớp hoàn toàn với tốc độ thu thập lúc train (Inference.py)
+    const targetFPS = 30;
+    const frameInterval = 1000 / targetFPS;
+
+    const loop = async () => {
+      if (!this.running || currentRunId !== this.runId) return;
+      const now = performance.now();
+
+      if (
+        !this.processing &&
+        this.video.readyState >= 2 &&
+        this.video.currentTime !== lastVideoTime &&
+        now - lastProcessedAt >= frameInterval
+      ) {
+        lastVideoTime = this.video.currentTime;
+        lastProcessedAt = now;
+        this.processing = true;
+
+        try {
+          await this.holistic.send({ image: this.video });
+        } catch (error) {
+          console.error("MediaPipe Holistic frame failed:", error);
+        } finally {
+          this.processing = false;
         }
       }
-      this.animFrameId = setTimeout(loop, intervalMs);
+
+      if (this.running && currentRunId === this.runId) {
+        this.animFrameId = requestAnimationFrame(loop);
+      }
     };
-    loop();
+
+    this.animFrameId = requestAnimationFrame(loop);
+    return true;
   }
 
   stop() {
     this.running = false;
-    if (this.animFrameId) { clearTimeout(this.animFrameId); this.animFrameId = null; }
+    this.runId++;
+    if (this.animFrameId) {
+      cancelAnimationFrame(this.animFrameId);
+      this.animFrameId = null;
+    }
+    if (this.ctx && this.canvas) {
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
   }
 }
 
-const mediapipe = new MediaPipeService();
-export default mediapipe;
+export default new MediaPipeService();

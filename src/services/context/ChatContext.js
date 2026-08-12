@@ -476,8 +476,8 @@ const fetchConversations = useCallback(async (userId) => {
 
   // ============ AI RECOGNITION — phải khai báo trước endCall ============
   const [aiText, setAiText] = useState('');
+  const [aiStatus, setAiStatus] = useState('Đang chờ ký hiệu...');
   const [aiActive, setAiActive] = useState(false);
-  const predictionCounts = useRef({});
   const aiSocketConnected = useRef(false);
 
   const stopAI = useCallback(() => {
@@ -485,29 +485,57 @@ const fetchConversations = useCallback(async (userId) => {
     aiSocket.offPrediction();
     setAiActive(false);
     setAiText('');
-    predictionCounts.current = {};
+    setAiStatus('Đang chờ ký hiệu...');
     aiSocketConnected.current = false;
+  }, []);
+
+  const clearAIText = useCallback(() => {
+    setAiText('');
+    setAiStatus('Đang chờ ký hiệu...');
+    aiSocket.clearRecognition();
   }, []);
 
   const startAI = useCallback(async () => {
     aiSocket.connect();
-    aiSocketConnected.current = true;
+    setAiStatus('Đang kết nối AI server...');
+    try {
+      await aiSocket.waitUntilConnected();
+      aiSocketConnected.current = true;
+    } catch (error) {
+      aiSocketConnected.current = false;
+      setAiActive(false);
+      setAiStatus('Không kết nối được AI server');
+      console.error('AI server connection failed:', error);
+      return;
+    }
     if (!mediapipe.ready) {
       const ok = await mediapipe.init();
-      if (!ok) { console.error('❌ MediaPipe init failed'); return; }
+      if (!ok) {
+        console.error('❌ MediaPipe init failed');
+        aiSocketConnected.current = false;
+        setAiStatus('Không thể khởi tạo MediaPipe');
+        return;
+      }
     }
+    aiSocket.offPrediction();
     aiSocket.onPrediction((data) => {
-      if (data.text && data.text !== '?') {
-        const key = data.text.trim();
-        setAiText(prev => {
-          // Kiểm tra trùng trước khi log
-          const isDuplicate = prev && (prev.endsWith(key) || prev === key ||
-            prev.split(' ').pop() === key);
-          if (!isDuplicate) console.log('🔤 AI raw:', JSON.stringify(data));
-          if (isDuplicate) return prev;
-          if (!prev) return key;
-          return prev + ' ' + key;
-        });
+      if (data.state === 'recognized' && data.text?.trim()) {
+        const word = data.text.trim();
+        setAiText(prev => prev ? `${prev} ${word}` : word);
+        setAiStatus('Đã nhận diện');
+        return;
+      }
+      if (data.state === 'collecting') {
+        const percent = Math.round((data.progress || 0) * 100);
+        setAiStatus(`Đang nhận diện... ${percent}%`);
+      } else if (data.state === 'confirming') {
+        setAiStatus('Đang xác nhận ký hiệu...');
+      } else if (data.state === 'uncertain') {
+        setAiStatus('Chưa nhận diện rõ');
+      } else if (data.state === 'waiting') {
+        setAiStatus('Đang chờ ký hiệu...');
+      } else if (data.state === 'error') {
+        console.warn('AI payload error:', data.error);
       }
     });
     mediapipe.onLandmarks = (landmarks) => {
@@ -515,13 +543,42 @@ const fetchConversations = useCallback(async (userId) => {
       if (aiSocketConnected.current) aiSocket.sendLandmarks(landmarks, currentUser?.id);
     };
     // Chọn nguồn video cho AI: chưa nghe → local (ký hiệu của mình), đã nghe → remote (ký hiệu đối phương)
-    const videoId = document.getElementById('localVideo');
+    const localVideo = document.getElementById('localVideo');
+    const remoteVideo = document.getElementById('remoteVideo');
     // Dùng callStateRef thay vì callState để tránh stale closure
-    const video = callStateRef.current.status === 'connected'
-      ? (document.getElementById('remoteVideo') || videoId)
-      : videoId;
-    if (video) { mediapipe.start(video, 100); setAiActive(true); }
+    const hasRemoteStream = remoteVideo?.srcObject && remoteVideo.readyState >= 1;
+    const video = callStateRef.current.status === 'connected' && hasRemoteStream
+      ? remoteVideo
+      : localVideo;
+    if (video && mediapipe.start(video, null)) {
+      setAiActive(true);
+      setAiStatus('Đang chờ ký hiệu...');
+    } else {
+      setAiStatus('Chưa có video để nhận diện');
+    }
   }, [currentUser]);
+
+  const attachRemoteStream = useCallback((stream) => {
+    const tryAttach = (retry = 5) => {
+      const remoteVideo = window.__remoteVideo;
+      if (!remoteVideo) {
+        if (retry > 0) setTimeout(() => tryAttach(retry - 1), 300);
+        return;
+      }
+
+      remoteVideo.srcObject = stream;
+      remoteVideo.style.display = 'block';
+      remoteVideo.play().then(() => {
+        console.log('✅ Remote video attached');
+        if (mediapipe.running) {
+          aiSocket.clearRecognition();
+          mediapipe.start(remoteVideo, null);
+          setAiStatus('Đang chờ ký hiệu từ người đối diện...');
+        }
+      }).catch(error => console.warn('Remote video play failed:', error));
+    };
+    tryAttach();
+  }, []);
 
   const [callState, setCallState] = useState({
     active: false, type: null, status: '',
@@ -549,7 +606,6 @@ const fetchConversations = useCallback(async (userId) => {
     stopAI();
     console.log("🧹 Clearing AI text");
     setAiText("");
-    predictionCounts.current = {};
     setCallState({ active: false, type: null, status: '', remoteStream: null, remoteUser: null });
     setTimeout(() => { window.__callEnding = false; }, 2000);
   }, []);
@@ -589,8 +645,6 @@ const fetchConversations = useCallback(async (userId) => {
     // Render overlay TRƯỚC để DOM video tồn tại
     setCallState({ active: true, type: isVideo ? 'video' : 'voice', status: 'calling', remoteStream: null, remoteUser: { id: targetUserId } });
     await new Promise(r => setTimeout(r, 100)); // Đợi React render DOM
-    // Tự động bật AI nhận diện ký hiệu
-    startAI();
     try {
       const webrtc = (await import('../../services/webrtc')).default;
       webrtc.pc = null;
@@ -598,16 +652,12 @@ const fetchConversations = useCallback(async (userId) => {
       webrtc.onCallEnded = () => endCall();
       webrtc.onRemoteStream = (stream) => {
         console.log('📹 Remote stream received');
-        const tryAttach = (retry = 5) => {
-          const rv = window.__remoteVideo;
-          if (rv) { rv.srcObject = stream; rv.style.display = 'block'; rv.play().catch(e => {}); console.log('✅ Remote video attached'); }
-          else if (retry > 0) setTimeout(() => tryAttach(retry - 1), 300);
-        };
-        tryAttach();
+        attachRemoteStream(stream);
       };
       // Gắn local video ngay (DOM đã render)
       var lv = window.__localVideo;
       if (lv && webrtc.localStream) { lv.srcObject = webrtc.localStream; console.log('✅ Local video attached'); }
+      await startAI();
       webrtc.onIceCandidate = (candidate) => {
         socketService.emit('ice_candidate', { toUserId: targetUserId, candidate: candidate.toJSON() });
       };
@@ -617,7 +667,7 @@ const fetchConversations = useCallback(async (userId) => {
       console.error('call error:', err);
       setCallState({ active: false, type: null, status: '', remoteStream: null, remoteUser: null });
     }
-  }, [currentUser, endCall]);
+  }, [currentUser, endCall, startAI, attachRemoteStream]);
 
   const acceptCall = useCallback(async () => {
     try {
@@ -627,8 +677,6 @@ const fetchConversations = useCallback(async (userId) => {
       const webrtc = (await import('../../services/webrtc')).default;
       webrtc.pc = null;
       await webrtc.startLocalStream(callState.type === 'video');
-      // Tự động bật AI nhận diện ký hiệu
-      startAI();
       webrtc.onCallConnected = () => {
         setAiText("");
         setCallState(prev => ({ ...prev, status: 'connected' }));
@@ -636,15 +684,11 @@ const fetchConversations = useCallback(async (userId) => {
       webrtc.onCallEnded = () => endCall();
       webrtc.onRemoteStream = (stream) => {
         console.log('📹 Remote stream received');
-        const tryAttach = (retry = 5) => {
-          const rv = window.__remoteVideo;
-          if (rv) { rv.srcObject = stream; rv.style.display = 'block'; rv.play().catch(e => {}); console.log('✅ Remote video attached'); }
-          else if (retry > 0) setTimeout(() => tryAttach(retry - 1), 300);
-        };
-        tryAttach();
+        attachRemoteStream(stream);
       };
       const lv = window.__localVideo;
-      if (lv && webrtc.localStream) { lv.srcObject = webrtc.localStream; } else { var _lv = lv; setTimeout(function() { var lv2 = window.__localVideo; if (lv2 && webrtc.localStream) lv2.srcObject = webrtc.localStream; }, 500); }
+      if (lv && webrtc.localStream) { lv.srcObject = webrtc.localStream; } else { setTimeout(function() { var lv2 = window.__localVideo; if (lv2 && webrtc.localStream) lv2.srcObject = webrtc.localStream; }, 500); }
+      await startAI();
       webrtc.onIceCandidate = (candidate) => {
         socketService.emit('ice_candidate', { toUserId: fromUserId, candidate: candidate.toJSON() });
       };
@@ -658,7 +702,7 @@ const fetchConversations = useCallback(async (userId) => {
       socketService.emit('answer_call', { toUserId: fromUserId, answer });
       window.__pendingCallOffer = null;
     } catch (err) { console.error('accept call error:', err); }
-  }, [callState.type, endCall]);
+  }, [callState.type, endCall, startAI, attachRemoteStream]);
 
   const initializeSocket = useCallback((userId) => {
     try {
@@ -706,7 +750,7 @@ const fetchConversations = useCallback(async (userId) => {
     selectChat, setSelectedChat: selectChat, fetchMessages, sendMessage,
     uploadFile, startTyping, stopTyping,
     isUserOnline: (uid) => onlineUsers.has(uid),
-    aiText, aiActive, startAI, stopAI,
+    aiText, aiStatus, aiActive, startAI, stopAI, clearAIText,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
