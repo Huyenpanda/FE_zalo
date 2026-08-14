@@ -554,9 +554,7 @@ const fetchConversations = useCallback(async (userId) => {
         return;
       }
       if (data.state === 'collecting') {
-        setAiPreview(null);
-        const percent = Math.round((data.progress || 0) * 100);
-        setAiStatus(`Đang nhận diện... ${percent}%`);
+        setAiStatus('');
       } else if (data.state === 'confirming') {
         const predictedSign = data.text?.trim();
         setAiPreview(predictedSign ? {
@@ -565,7 +563,7 @@ const fetchConversations = useCallback(async (userId) => {
           confirmations: Number(data.confirmations) || 0,
           requiredConfirmations: Number(data.requiredConfirmations) || 0,
         } : null);
-        setAiStatus('Đang xác nhận ký hiệu...');
+        setAiStatus('');
       } else if (data.state === 'uncertain') {
         setAiPreview(null);
         setAiStatus('Chưa nhận diện rõ');

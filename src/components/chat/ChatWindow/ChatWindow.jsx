@@ -240,10 +240,12 @@ const ChatWindow = ({ selectedChat, onBack }) => {
             <div className={styles.aiOverlay}>
               <div className={styles.aiCard}>
                 <div className={styles.aiCardHeader}>
-                  <div className={styles.aiStatus} role="status">
-                    <span className={styles.aiStatusDot} />
-                    {aiStatus}
-                  </div>
+                  {aiStatus && (
+                    <div className={styles.aiStatus} role="status">
+                      <span className={styles.aiStatusDot} />
+                      {aiStatus}
+                    </div>
+                  )}
                   <button
                     type="button"
                     className={styles.aiClearButton}
